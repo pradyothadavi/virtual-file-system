@@ -1,0 +1,4 @@
+createvfs demo 1024
+mountvfs demo
+makedir / dir1
+makedir /dir1 dir2
