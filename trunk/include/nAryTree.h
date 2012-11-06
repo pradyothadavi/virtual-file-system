@@ -21,8 +21,6 @@ struct nAryTreeNode{
     struct nAryTreeNode *rightSibling;
 };
 
-struct nAryTreeNode *sPtr_rootNAryTree = NULL;
-
 struct nAryTreeNode *s_loadFileSystem(int,FILE *,struct mainHeader *);
 
 struct nAryTreeNode * s_loadFileSystemAux(struct nAryTreeNode *, FILE *);

@@ -224,10 +224,13 @@ void v_traverseNAryTree(struct nAryTreeNode *ptrToANode){
 }
 
 /*
-Function Name;
-Description:
-Parameters:
-Return Type:
+Function Name: v_traverseNAryTreeAux
+Description: It traverses a n-Ary Tree based on the mode which is passed to it.
+Parameters: It takes 2 parameters
+            1) Pointer to the root of the n-Ary Tree
+            2) Integers value named as mode, which specifies for what the n-Ary
+               Tree is being traversed.
+Return Type: void
 */
 void v_traverseNAryTreeAux(struct nAryTreeNode *ptrToANode,int i_mode){
     struct nAryTreeNode *temp = NULL;
@@ -251,10 +254,13 @@ void v_traverseNAryTreeAux(struct nAryTreeNode *ptrToANode,int i_mode){
 }
 
 /*
-Function Name:
-Description:
-Parameters:
-Return Type:
+Function Name: s_searchNAryTreeNode
+Description: It searches for a given file in the n-Ary Tree
+Parameters: It takes 2 parameters
+            1) Pointer to the root of the n-Ary Tree
+            2) Name of the file to be searched in the n-Ary Tree
+Return Type: It return a pointer to the node if the file is found in the
+             n-Ary Tree else NULL
 */
 struct nAryTreeNode *s_searchNAryTreeNode(struct nAryTreeNode *ptrToANode,char *cPtr_fileName){
 
@@ -275,10 +281,10 @@ struct nAryTreeNode *s_searchNAryTreeNode(struct nAryTreeNode *ptrToANode,char *
 }
 
 /*
-Function Name:
-Description;
-Parameters:
-Return Type;
+Function Name: s_getNAryTreeNode
+Description: It creates a node of the type n-Ary Tree
+Parameters: void
+Return Type: It returns a pointers to the newly created n-Ary Tree Node
 */
 struct nAryTreeNode *s_getNAryTreeNode(){
 

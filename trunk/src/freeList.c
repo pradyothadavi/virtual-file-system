@@ -31,10 +31,12 @@ struct freeList *s_createFreeList(int i_startingBlockNo, int i_totalBlocks){
 }
 
 /*
-Function Name:
-Description:
-Parameters:
-Return Type:
+Function Name: s_insertFreeListNode
+Description: It inserts a newly created node to the list
+Parameters: It takes 2 parameters
+            1) Head pointer of the list to which the node is to be inserted
+            2) Pointer to the node to be inserted
+Return Type: It returns a pointer to the head of the list
 */
 struct freeList *s_insertFreeListNode(struct freeList *headPtr,struct freeList *tempNode){
 
@@ -52,16 +54,16 @@ struct freeList *s_insertFreeListNode(struct freeList *headPtr,struct freeList *
               currentNode = currentNode->sPtr_nextFreeBlock;
          }
 
-         currentNode = tempNode;
+         currentNode->sPtr_nextFreeBlock = tempNode;
     }
 
     return headPtr;
 }
 /*
-Function Name:
-Description:
-Parameters:
-Return Type:
+Function Name: s_createFreeListNode
+Description: It creates a node of the type Free List
+Parameters: It takes a integer parameter, which is the free data block number.
+Return Type: It returns a pointer to the newly created node.
 */
 struct freeList *s_createFreeListNode(int i_data){
 
@@ -110,10 +112,13 @@ int i_getFreeBlock(struct freeList *headPtr){
 }
 
 /*
-Function Name:
-Description:
-Parameters:
-Return Type:
+Function Name: v_deleteFreeListNode
+Description: It deletes a node from the list.
+Parameters: It takes 2 parameters
+            1) Pointer to the head of the list from which the node is to be
+               deleted.
+            2) Pointer to the node which is to be deleted.
+Return Type: void
 */
 void v_deleteFreeListNode(struct freeList *headPtr, struct freeList *currentNode){
 
@@ -143,4 +148,28 @@ struct freeList * s_addFreeBlock(struct freeList *headPtr, int i_dataBlockNo){
     headPtr = s_insertFreeListNode(headPtr,tempNode);
 
     return headPtr;
+}
+
+/*
+Function Name: v_displayList
+Description: It displays the contents of the list
+Parameters: It takes a single parameter, which is a pointer to the head of list
+Return Type: void
+*/
+void v_displayList(struct freeList *headPtr){
+
+    struct freeList *currentNode = NULL;
+
+    currentNode = headPtr;
+
+    printf("DEBUG: No.of.nodes present: %d \n",currentNode->ui_blockNo);
+
+    currentNode = currentNode->sPtr_nextFreeBlock;
+
+    printf("Free List Block No : ");
+    while(currentNode != NULL){
+         printf("%d ",currentNode->ui_blockNo);
+         currentNode = currentNode->sPtr_nextFreeBlock;
+    }
+    printf("\n");
 }
