@@ -15,6 +15,11 @@ Application Name: Virtual File System
 #include "fileSystemOps.h"
 #include "nAryTree.h"
 #include "hashTable.h"
+#include "global.h"
+#include "freeList.h"
+
+extern struct freeList *s_dataBlockFreeList;/*Pointer to free data blockList*/
+extern struct freeList *s_inodeBlockFreeList;/*Pointer to free inode blockList*/
 
 /*
 Function Name: main

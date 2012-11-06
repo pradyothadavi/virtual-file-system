@@ -17,6 +17,7 @@
 #include "mainHeader.h"
 #include "nAryTree.h"
 #include "global.h"
+#include "vfs_errorcodes.h"
 
 /*
 Group No : 28

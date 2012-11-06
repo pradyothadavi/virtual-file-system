@@ -80,6 +80,9 @@ void v_makedir(char *cPtr_directoryPath,char *cPtr_directoryName){
          cPtr_token = strtok(NULL,"/");
     }/* End of Outer while */
 
+    v_displayList(s_dataBlockFreeList);
+    v_displayList(s_inodeBlockFreeList);
+
     /* Get a inode number from the free List */
     ui_inodeNo = i_getFreeBlock(s_inodeBlockFreeList);
     /* Path of the directory */
