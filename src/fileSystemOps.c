@@ -1,3 +1,10 @@
+/*
+    This file contains the code for the Virtual File System commands.
+    Namely 1) CreateVfs
+           2) MountVfs
+           3) UnmountVfs
+*/
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<sys/types.h>
@@ -9,11 +16,19 @@
 #include "fileDescriptor.h"
 #include "mainHeader.h"
 #include "nAryTree.h"
+#include "global.h"
 
 /*
 Group No : 28
 Version No : 1.0
 */
+
+/* Pointers to different data structures, which will be used by most of the
+   modules which execute different commands.
+*/
+extern struct nAryTreeNode *sPtr_rootNAryTree; /* Pointer to n-Ary Tree */
+extern struct freeList *s_dataBlockFreeList;/*Pointer to free data blockList*/
+extern struct freeList *s_inodeBlockFreeList;/*Pointer to free inode blockList*/
 
 /*
 Function Name: create_vfs
@@ -21,18 +36,18 @@ Description: It creates a file system with the specified name and specified
              size.
 Parameters: It takes two parameters
             1)vfsLabel, which is the name of the VFS
-            2)size, which is the size of the VFS ( in kilobytes )
+            2)size, which is the size of the VFS ( in KB )
 Return Type: void
 */
 void create_vfs(const char *vfsLabel,unsigned int ui_size){
 
-    int i = 0;
-    int j = 0;
     struct mainHeader s_superBlock;
     struct fileDescriptor s_inode;
     struct dataBlock s_block;
     struct directoryEntry s_dientry;
 
+    int i = 0;
+    int j = 0;
     int i_retVal = 0;
 
 #if DEBUG
@@ -40,11 +55,18 @@ void create_vfs(const char *vfsLabel,unsigned int ui_size){
     struct fileDescriptor s_testInode;
 #endif
 
-    FILE *fpVfs;
+    FILE *fpVfs = NULL;
+
+    /* Error handling, to check for a valid name of Vfs */
+
+    /* Validate the size of Vfs */
+    if( ui_size <= 0){
+         printf("%s \n",ERR_VFS_CREATE_05);
+         exit(1);
+    }
 
     if((fpVfs = fopen(vfsLabel,"wb+")) == NULL){
-         printf("ERROR: Cannot Create The File System \n");
-         printf("STATUS: Program Terminated \n");
+         printf("%s \n",ERR_VFS_CREATE_02);
          exit(1);
     }
 
@@ -56,15 +78,13 @@ void create_vfs(const char *vfsLabel,unsigned int ui_size){
 
     /* Validation Check If the file pointer can move to the end of the file or not */
     if((fseek(fpVfs,(long)s_superBlock.ui_totalBlocks*VFS_BLOCKSIZE,SEEK_SET)) == -1){
-         printf("ERROR: Cannot Traverse The Entire File \n");
-         printf("STATUS: Program Terminated \n");
+         printf(" %s \n",ERR_VFS_CREATE_03);
          exit(1);
     }
 
     /* Set the file pointer to the initial position of the file */
     if((fseek(fpVfs,(long)0,SEEK_SET)) == -1){
-         printf("ERROR: Cannot Travese To The First Data Block \n");
-         printf("STATUS: Program Terminated \n");
+         printf(" %s \n",ERR_VFS_CREATE_03);
          exit(1);
     }
 
@@ -275,40 +295,46 @@ void mount_vfs(const char *vfsLabel){
     struct mainHeader s_superBlock;
     struct mainHeader * sPtr_superBlock;
 
-    /* extern variables defined and initialized */
-    extern struct nAryTreeNode *sPtr_rootNAryTree;
-    extern struct freeList *s_dataBlockFreeList;
-    extern struct freeList *s_inodeBlockFreeList;
-
     int i_retVal = 0;
 
     FILE *fpVfs;
 
     if((fpVfs = fopen(vfsLabel,"rb+")) == NULL){
-         printf("ERROR: Cannot Read The File System \n");
-         printf("STATUS: Program Terminated \n");
+         printf("%s \n",ERR_VFS_MOUNT_01);
          exit(1);
     }
 
     if((fseek(fpVfs,0,SEEK_SET)) == -1){
-         printf("ERROR: Cannot Fetch The Super Block \n");
+         printf("%s \n",ERR_VFS_MOUNT_02);
     }
 
     if((i_retVal = fread(&s_superBlock,sizeof(struct mainHeader),1,fpVfs)) != 1){
-         printf("ERROR: Cannot Read The Super Block \n");
+         printf("%s \n",ERR_VFS_MOUNT_02);
     }
 
     sPtr_superBlock = &s_superBlock;
 
-    /* Create a list a free data blocks */
-    s_dataBlockFreeList = s_createFreeList(s_superBlock.ui_startBlockNoOfDataBlockArray+2,s_superBlock.ui_totalBlocks);  
+    /* Create a list a free data blocks.
+       Note: Value 2 is added because 2 data blocks have already been used for
+             storing the directory entries of root and lost+found folder.
+    */
+    s_dataBlockFreeList = s_createFreeList(
+                          s_superBlock.ui_startBlockNoOfDataBlockArray+2,
+                          s_superBlock.ui_totalBlocks);  
 
     /* Create a list a free inode blocks */
-    s_inodeBlockFreeList = s_createFreeList(VFS_INODE_STARTBLOCK+s_superBlock.ui_noOfUsedFileDescriptors,
-                                            s_superBlock.ui_maxNoOfFileDescriptors);
+    s_inodeBlockFreeList = s_createFreeList(
+                           VFS_INODE_STARTBLOCK+s_superBlock.ui_noOfUsedFileDescriptors,
+                           s_superBlock.ui_maxNoOfFileDescriptors);
+
+#if DEBUG
+    v_displayList(s_dataBlockFreeList);
+    v_displayList(s_inodeBlockFreeList);
+#endif
 
     /* Load the file system into the n-Ary Tree */
     sPtr_rootNAryTree = s_loadFileSystem(VFS_ROOT_INODE,fpVfs,sPtr_superBlock);
+
 #if DEBUG
     printf("DEBUG: Root Pointer : %d \n",sPtr_rootNAryTree->s_inode->ui_inodeNo);
     v_traverseNAryTree(sPtr_rootNAryTree);

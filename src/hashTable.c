@@ -21,10 +21,13 @@ void v_initializeHashTable(){
 }
 
 /*
-Function Name:
-Description:
-Parameters:
-Return Type:
+Function Name: s_createHashTableNode
+Description: It creates a node of the type hashTable and stores the fileName
+             and Inode number in it.
+Parameters: It takes 2 parameters
+            1) Character pointer a fileName
+            2) Inode number of the fileName
+Return Type: It return a pointer to the newly created node
 */
 struct hashTableNode *s_createHashTableNode(char *cPtr_fileName,unsigned int ui_data){
     
@@ -55,10 +58,11 @@ void v_loadHashTable(struct nAryTreeNode *root){
 }
 
 /*
-Function Name:
-Description:
-Parameters:
-Return Type:
+Function Name: ui_calculateHashIndex
+Description: It takes the fileName to be hashed and calculates the hash index
+             for the hash table.
+Parameters: It takes the fileName as the parameter
+Return Type: It returns the hash index
 */
 unsigned int ui_calculateHashIndex(char *fileName){
 
@@ -79,10 +83,13 @@ unsigned int ui_calculateHashIndex(char *fileName){
 }
 
 /*
-Function Name:
-Description:
-Parameters:
-Return Type:
+Function Name: v_hashFile
+Description: It will hash a given file into the hash table
+Parameters: It takes 3 parameters
+            1) The hash index
+            2) Name of the file to be hashed
+            3) Inode number of the file Name to be hashed
+Return Type: void
 */
 void v_hashFile(unsigned int ui_index,char *cPtr_fileName, unsigned int ui_inodeNo){
 
@@ -90,10 +97,14 @@ void v_hashFile(unsigned int ui_index,char *cPtr_fileName, unsigned int ui_inode
 }
 
 /*
-Function Name:
-Description:
-Parameters:
-Return Type:
+Function Name: s_insertIntoHashTable
+Description: It hashes the fileName into the hash table.i.e. it inserts infront
+             of the list which is present a each hash inex location.
+Parameters: It takes 3 parameters
+            1) Pointer to the list at a given hash index
+            2) Name of the file to be hashed
+            3) Inode number of the file to be hashed
+Return Type: It returns a pointer pointing to the head of the list
 */
 struct hashTableNode *s_insertIntoHashTable(struct hashTableNode *headPtr,char *cPtr_fileName,unsigned int ui_inodeNo){
 

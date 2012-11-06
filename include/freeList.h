@@ -17,15 +17,11 @@ struct freeList{
     struct freeList *sPtr_nextFreeBlock;
 };
 
-struct freeList *s_dataBlockFreeList = NULL;
-    
-struct freeList *s_inodeBlockFreeList = NULL;
-
 struct freeList *s_createFreeList(int, int);
 struct freeList *s_insertFreeListNode(struct freeList *,struct freeList *);
 struct freeList *s_createFreeListNode(int);
 int i_getFreeBlock(struct freeList *);
 void v_deleteFreeListNode(struct freeList *, struct freeList *);
 struct freeList * s_addFreeBlock(struct freeList *, int);
-
+void v_displayList(struct freeList *);
 #endif

@@ -6,19 +6,23 @@
 #include "directoryOps.h"
 #include "fileDescriptor.h"
 #include "freeList.h"
+#include "global.h"
+
+/* extern variables*/
+extern struct nAryTreeNode *sPtr_rootNAryTree;
+extern struct freeList *s_dataBlockFreeList;
+extern struct freeList *s_inodeBlockFreeList;
 
 /*
-Function Name:
-Description:
-Parameters:
-Return Type:
+Function Name: v_makedir
+Description: It creates a directory in the virtual file system. If the 
+             intermediate directories does not exists then it creates them.
+Parameters: It takes 2 parameters.
+            1) Path of the directory to be created
+            2) Name of the directory to be created
+Return Type: void
 */
 void v_makedir(char *cPtr_directoryPath,char *cPtr_directoryName){
-
-    /* extern variables defined and initialized */
-    extern struct nAryTreeNode *sPtr_rootNAryTree;
-    extern struct freeList *s_dataBlockFreeList;
-    extern struct freeList *s_inodeBlockFreeList;
     
     struct nAryTreeNode *currentNode = NULL;
     struct nAryTreeNode *previousNode = NULL;
