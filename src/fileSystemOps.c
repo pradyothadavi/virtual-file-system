@@ -27,9 +27,9 @@ Version No : 1.0
 /* Pointers to different data structures, which will be used by most of the
    modules which execute different commands.
 */
-extern struct nAryTreeNode *sPtr_rootNAryTree; /* Pointer to n-Ary Tree */
-extern struct freeList *s_dataBlockFreeList;/*Pointer to free data blockList*/
-extern struct freeList *s_inodeBlockFreeList;/*Pointer to free inode blockList*/
+struct freeList *s_dataBlockFreeList = NULL;
+struct freeList *s_inodeBlockFreeList = NULL;
+struct nAryTreeNode *sPtr_rootNAryTree = NULL;
 
 /*
 Function Name: create_vfs

@@ -33,6 +33,10 @@ struct nAryTreeNode *s_searchNAryTreeNode(struct nAryTreeNode *,char *);
 
 struct nAryTreeNode *s_getNAryTreeNode();
 
+struct nAryTreeNode *s_deleteNAryTreeNodeAux(struct nAryTreeNode *);
+
+void v_deleteNAryTreeNode(struct nAryTreeNode *);
+
 void v_traverseNAryTree(struct nAryTreeNode *);
 
 void v_traverseNAryTreeAux(struct nAryTreeNode *,int);

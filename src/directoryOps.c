@@ -8,11 +8,6 @@
 #include "freeList.h"
 #include "global.h"
 
-/* extern variables*/
-extern struct nAryTreeNode *sPtr_rootNAryTree;
-extern struct freeList *s_dataBlockFreeList;
-extern struct freeList *s_inodeBlockFreeList;
-
 /*
 Function Name: v_makedir
 Description: It creates a directory in the virtual file system. If the 
@@ -38,6 +33,7 @@ void v_makedir(char *cPtr_directoryPath,char *cPtr_directoryName){
     unsigned int ui_noOfCharactersParsed = 0;
 
     previousNode = currentNode = sPtr_rootNAryTree;
+
     /* Tokenize the directory path */
     cPtr_token = strtok(cPtr_directoryPath,"/");
     while(cPtr_token != NULL){
@@ -79,9 +75,6 @@ void v_makedir(char *cPtr_directoryPath,char *cPtr_directoryName){
          }/* end of if(NULL == currentNode) */
          cPtr_token = strtok(NULL,"/");
     }/* End of Outer while */
-
-    v_displayList(s_dataBlockFreeList);
-    v_displayList(s_inodeBlockFreeList);
 
     /* Get a inode number from the free List */
     ui_inodeNo = i_getFreeBlock(s_inodeBlockFreeList);

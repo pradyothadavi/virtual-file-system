@@ -18,9 +18,6 @@ Application Name: Virtual File System
 #include "global.h"
 #include "freeList.h"
 
-extern struct freeList *s_dataBlockFreeList;/*Pointer to free data blockList*/
-extern struct freeList *s_inodeBlockFreeList;/*Pointer to free inode blockList*/
-
 /*
 Function Name: main
 Description: It is the entry point of the application, which calls different 
