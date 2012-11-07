@@ -295,3 +295,70 @@ struct nAryTreeNode *s_getNAryTreeNode(){
 
     return temp;
 }
+
+/*
+Function Name: v_deleteNAryTreeNode
+Description: It deletes a node in the n-Ary Tree and the subtree of the node
+             deleted by this function will also be deleted using another
+             auxillary function.
+Parameters: It takes a single parameter.i.e. a pointer to the node to be deleted
+Return Type: void
+*/
+void v_deleteNAryTreeNode(struct nAryTreeNode *ptrToANode){
+
+    struct nAryTreeNode *ptrNodeToBeDeleted = NULL;
+    struct nAryTreeNode *temp = NULL;
+
+    ptrNodeToBeDeleted = ptrToANode;
+
+    if( NULL == ptrNodeToBeDeleted){
+         return;
+    }
+
+    /* Node to be deleted has the information about a regular file, then it 
+       won't have any children.
+    */
+    if(ptrNodeToBeDeleted->s_inode->c_fileType[0] == 'r'){
+         free(ptrNodeToBeDeleted);
+    } else if (ptrNodeToBeDeleted->s_inode->c_fileType[0] == 'd'){
+         /* The directory to be deleted has sub-directories in it */
+         if(ptrNodeToBeDeleted->leftChild != NULL){
+              /* Auxillary Function which will delete the sub-directory */
+              temp = s_deleteNAryTreeNodeAux(ptrNodeToBeDeleted->leftChild);
+              ptrNodeToBeDeleted->leftChild = NULL;
+              free(temp);
+         }
+         free(ptrNodeToBeDeleted);
+    }
+}
+
+/*
+Function Name: s_deleteNAryTreeNodeAux
+Description: It will delete the subtree of a node that is to be deleted in a 
+             n-Ary Tree.
+Parameters: It takes a single pointer pointing to the root of the subtree to 
+            be deleted.
+Return Type: It returns a pointer, pointing to the root of the subtree.
+*/
+struct nAryTreeNode *s_deleteNAryTreeNodeAux(struct nAryTreeNode *ptrToANode){
+
+    struct nAryTreeNode *temp = NULL;
+    struct nAryTreeNode *nodeToBeDeleted = NULL;
+
+    temp = ptrToANode;
+    
+    if( (NULL == temp->rightSibling) && (NULL == temp->leftChild) ){
+         return temp;
+    } else if( NULL != temp->leftChild ) {
+         nodeToBeDeleted = s_deleteNAryTreeNodeAux(temp->leftChild);
+         temp->leftChild = NULL;
+         free(nodeToBeDeleted);
+    }else if( NULL != temp->rightSibling) {
+         nodeToBeDeleted = s_deleteNAryTreeNodeAux(temp->rightSibling);
+         temp->rightSibling = NULL;
+         free(nodeToBeDeleted);     
+    }
+    
+    return temp;
+}
+
