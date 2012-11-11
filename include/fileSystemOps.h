@@ -5,7 +5,7 @@ Group No : 28
 Version No : 1.0
 */
 
-#define DEBUG 1
+#define DEBUG 0
 
 #define VFS_NAMELEN 32
 #define VFS_UNIQUE_FILE_SYSTEM_NO 1316

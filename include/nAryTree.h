@@ -14,6 +14,10 @@ Version No : 1.0
 
 #define HASHING 101
 
+#define RECURSIVE 201
+
+#define NONRECURSIVE 202
+
 struct nAryTreeNode{
     struct fileDescriptor *s_inode;
     struct nAryTreeNode *parent;
@@ -29,7 +33,7 @@ struct nAryTreeNode * s_createNAryTreeNode(int,FILE *);
 
 struct nAryTreeNode * s_insertNAryTreeNode(struct nAryTreeNode *,struct nAryTreeNode *);
 
-struct nAryTreeNode *s_searchNAryTreeNode(struct nAryTreeNode *,char *);
+struct nAryTreeNode *s_searchNAryTreeNode(struct nAryTreeNode *,char *,int);
 
 struct nAryTreeNode *s_getNAryTreeNode();
 

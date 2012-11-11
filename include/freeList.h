@@ -9,7 +9,7 @@ Group No : 28
 Version No : 1.0
 */
 
-#define DEBUG 1
+#define DEBUG 0
 
 /* This header file has the datatype definitions for the FreeList */
 struct freeList{
