@@ -216,7 +216,7 @@ void v_traverseNAryTree(struct nAryTreeNode *ptrToANode){
          return;
     } else {
          v_traverseNAryTree(temp->leftChild);
-#if DEBUG
+#if 1
     printf("DEBUG: FD No : %d \n",temp->s_inode->ui_inodeNo);
 #endif
          v_traverseNAryTree(temp->rightSibling);
@@ -262,19 +262,43 @@ Parameters: It takes 2 parameters
 Return Type: It return a pointer to the node if the file is found in the
              n-Ary Tree else NULL
 */
-struct nAryTreeNode *s_searchNAryTreeNode(struct nAryTreeNode *ptrToANode,char *cPtr_fileName){
+struct nAryTreeNode *s_searchNAryTreeNode(struct nAryTreeNode *ptrToANode,char *cPtr_fileName,int mode){
 
     struct nAryTreeNode *temp = NULL;
 
     /* Assign temp to the root Node */
     temp = ptrToANode;
 
-    if( NULL != temp ){
-         if( (0 == strcmp(temp->s_inode->cptr_fileName,cPtr_fileName)) ){
-              return temp;
+    if( RECURSIVE == mode){
+         
+         if( NULL != temp ){
+              if( (0 == strcmp(temp->s_inode->cptr_fileName,cPtr_fileName)) ){
+                   return temp;
+              }
+              s_searchNAryTreeNode(temp->leftChild,cPtr_fileName,mode);
+              s_searchNAryTreeNode(temp->rightSibling,cPtr_fileName,mode);
          }
-         s_searchNAryTreeNode(temp->leftChild,cPtr_fileName);
-         s_searchNAryTreeNode(temp->rightSibling,cPtr_fileName);
+    }
+    
+    if( NONRECURSIVE == mode ){
+         /*if( NULL != temp ){
+              if( (0 == strcmp(temp->s_inode->cptr_fileName,cPtr_fileName)) ){
+                   return temp;
+              }
+         }*/
+         if( NULL != temp && temp->leftChild != NULL){
+              temp = temp->leftChild;
+              if( (0 == strcmp(temp->s_inode->cptr_fileName,cPtr_fileName)) ){
+                   return temp;
+              }
+         }
+         temp = temp->rightSibling;
+         while( temp != NULL){
+              if( (0 == strcmp(temp->s_inode->cptr_fileName,cPtr_fileName)) ){
+                   return temp;
+              }
+              temp = temp->rightSibling;
+         }
     }
 
     return temp;

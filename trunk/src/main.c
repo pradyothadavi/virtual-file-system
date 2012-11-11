@@ -129,19 +129,28 @@ void unmountvfs ( char *P1 )
 }
 
 void makedir ( char *P1, char *P2 ){
-    v_makedir(P1,P2);	
+    v_makedir(P1,P2);
 }
 
-void deletedir ( char *P1 )
-{
-	/* Call the appropriate function with given arguments and display appropriate output on the screen */
-	printf("deletedir_TO_BE_DONE\n");
+void deletedir ( char *P1 ){
+#if 1
+    printf("DEBUG: After makedir operation \n ");
+    v_traverseNAryTree(sPtr_rootNAryTree);
+#endif	
+    v_deletedir(P1);
+#if 1
+    printf("DEBUG: After deletedir operation \n ");
+    v_traverseNAryTree(sPtr_rootNAryTree);
+#endif	
 }
 
-void movedir ( char *P1, char *P2 )
-{
-	/* Call the appropriate function with given arguments and display appropriate output on the screen */
-	printf("movedir_TO_BE_DONE\n");
+void movedir ( char *P1, char *P2 ){
+    v_movedir(P1,P2);
+#if 1
+    printf("DEBUG: After movedir operation \n ");
+    v_traverseNAryTree(sPtr_rootNAryTree);
+#endif	
+
 }
 
 void listdir ( char *P1, int P2, char *P3 )

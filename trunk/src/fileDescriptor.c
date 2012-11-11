@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "fileDescriptor.h"
 
@@ -22,6 +23,8 @@ struct fileDescriptor *s_createFileDescriptor(char *fileName, char *filePath,
                                         unsigned int ui_dientryBlock){
 
     struct fileDescriptor *tempInode = NULL;
+
+    tempInode = (struct fileDescriptor *)malloc(sizeof(struct fileDescriptor)*1);
 
     strcpy(tempInode->cptr_fileName,fileName);
     strcpy(tempInode->cptr_filePath,filePath);
