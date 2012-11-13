@@ -7,4 +7,5 @@ void v_deletedir(char *);
 
 void v_movedir(char *,char *);
 
+void v_listdir(char *, int , char *);
 #endif

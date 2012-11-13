@@ -13,9 +13,8 @@ Version No : 1.0
 #include "mainHeader.h"
 
 #define HASHING 101
-
+#define BST 102
 #define RECURSIVE 201
-
 #define NONRECURSIVE 202
 
 struct nAryTreeNode{

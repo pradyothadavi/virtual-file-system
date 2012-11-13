@@ -22,8 +22,6 @@ void v_initializeHashTable();
 
 struct hashTableNode *s_createHashTableNode(char *,unsigned int);
 
-void v_loadHashTable(struct nAryTreeNode *);
-
 struct hashTableNode *s_insertIntoHashTable(struct hashTableNode *,char *,unsigned int);
 
 #endif

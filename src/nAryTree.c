@@ -5,6 +5,8 @@
 #include "nAryTree.h"
 #include "fileSystemOps.h"
 #include "freeList.h"
+#include "binarySearchTree.h"
+#include "global.h"
 
 /*
 Function Name: s_loadFileSystem
@@ -233,7 +235,9 @@ Parameters: It takes 2 parameters
 Return Type: void
 */
 void v_traverseNAryTreeAux(struct nAryTreeNode *ptrToANode,int i_mode){
+
     struct nAryTreeNode *temp = NULL;
+    struct binarySearchTree *tempNode = NULL;
 
     temp = ptrToANode;
 
@@ -247,6 +251,10 @@ void v_traverseNAryTreeAux(struct nAryTreeNode *ptrToANode,int i_mode){
                    ui_index = ui_calculateHashIndex(temp->s_inode->cptr_fileName);
                    v_hashFile(ui_index,temp->s_inode->cptr_fileName,temp->s_inode->ui_inodeNo);
               }
+         }
+         if( BST == i_mode ){
+              tempNode = s_getBSTNode(temp->s_inode->cptr_filePath,temp->s_inode->ui_inodeNo);
+              sPtr_rootBST = s_insertBSTNode(sPtr_rootBST,tempNode);         
          }
          v_traverseNAryTreeAux(temp->rightSibling,i_mode);
     }
@@ -281,11 +289,7 @@ struct nAryTreeNode *s_searchNAryTreeNode(struct nAryTreeNode *ptrToANode,char *
     }
     
     if( NONRECURSIVE == mode ){
-         /*if( NULL != temp ){
-              if( (0 == strcmp(temp->s_inode->cptr_fileName,cPtr_fileName)) ){
-                   return temp;
-              }
-         }*/
+         
          if( NULL != temp && temp->leftChild != NULL){
               temp = temp->leftChild;
               if( (0 == strcmp(temp->s_inode->cptr_fileName,cPtr_fileName)) ){
@@ -343,6 +347,7 @@ void v_deleteNAryTreeNode(struct nAryTreeNode *ptrToANode){
        won't have any children.
     */
     if(ptrNodeToBeDeleted->s_inode->c_fileType[0] == 'r'){
+         free(ptrNodeToBeDeleted->s_inode);
          free(ptrNodeToBeDeleted);
     } else if (ptrNodeToBeDeleted->s_inode->c_fileType[0] == 'd'){
          /* The directory to be deleted has sub-directories in it */
@@ -350,8 +355,10 @@ void v_deleteNAryTreeNode(struct nAryTreeNode *ptrToANode){
               /* Auxillary Function which will delete the sub-directory */
               temp = s_deleteNAryTreeNodeAux(ptrNodeToBeDeleted->leftChild);
               ptrNodeToBeDeleted->leftChild = NULL;
+              free(temp->s_inode);
               free(temp);
          }
+         free(ptrNodeToBeDeleted->s_inode);
          free(ptrNodeToBeDeleted);
     }
 }
@@ -376,10 +383,12 @@ struct nAryTreeNode *s_deleteNAryTreeNodeAux(struct nAryTreeNode *ptrToANode){
     } else if( NULL != temp->leftChild ) {
          nodeToBeDeleted = s_deleteNAryTreeNodeAux(temp->leftChild);
          temp->leftChild = NULL;
+         free(nodeToBeDeleted->s_inode);
          free(nodeToBeDeleted);
     }else if( NULL != temp->rightSibling) {
          nodeToBeDeleted = s_deleteNAryTreeNodeAux(temp->rightSibling);
          temp->rightSibling = NULL;
+         free(nodeToBeDeleted->s_inode);
          free(nodeToBeDeleted);     
     }
     

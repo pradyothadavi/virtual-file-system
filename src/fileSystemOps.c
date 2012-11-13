@@ -18,6 +18,7 @@
 #include "nAryTree.h"
 #include "global.h"
 #include "vfs_errorcodes.h"
+#include "binarySearchTree.h"
 
 /*
 Group No : 28
@@ -30,6 +31,7 @@ Version No : 1.0
 struct freeList *s_dataBlockFreeList = NULL;
 struct freeList *s_inodeBlockFreeList = NULL;
 struct nAryTreeNode *sPtr_rootNAryTree = NULL;
+struct binarySearchTree *sPtr_rootBST = NULL;
 
 /*
 Function Name: create_vfs
@@ -332,7 +334,6 @@ void mount_vfs(const char *vfsLabel){
     v_displayList(s_dataBlockFreeList);
     v_displayList(s_inodeBlockFreeList);
 #endif
-
     /* Load the file system into the n-Ary Tree */
     sPtr_rootNAryTree = s_loadFileSystem(VFS_ROOT_INODE,fpVfs,sPtr_superBlock);
 
@@ -342,6 +343,7 @@ void mount_vfs(const char *vfsLabel){
 #endif
 
     v_initializeHashTable();
-    v_loadHashTable(sPtr_rootNAryTree);
+    v_traverseNAryTreeAux(sPtr_rootNAryTree,HASHING);
+    v_traverseNAryTreeAux(sPtr_rootNAryTree->leftChild,BST);
 
 }

@@ -4,7 +4,7 @@ CC	=	gcc
 
 CFLAGS	=	-g -I$(VFSDIR)/include -ansi -pedantic
 
-OBJS	=	$(VFSDIR)/src/main.o $(VFSDIR)/src/fileDescriptor.o $(VFSDIR)/src/freeList.o $(VFSDIR)/src/nAryTree.o $(VFSDIR)/src/hashTable.o $(VFSDIR)/src/fileSystemOps.o $(VFSDIR)/src/directoryOps.o
+OBJS	=	$(VFSDIR)/src/main.o $(VFSDIR)/src/fileDescriptor.o $(VFSDIR)/src/freeList.o $(VFSDIR)/src/nAryTree.o $(VFSDIR)/src/hashTable.o $(VFSDIR)/src/binarySearchTree.o $(VFSDIR)/src/fileSystemOps.o $(VFSDIR)/src/directoryOps.o
 
 TARGET	=	myVfs_exe
 
