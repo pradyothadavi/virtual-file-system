@@ -296,3 +296,18 @@ void v_movedir(char *cPtr_sourcePath,char *cPtr_destinationPath){
          srcPathCurrentNode->parent = destPathPreviousNode;
     }
 }
+
+/*
+Function Name: v_listdir
+Description: The function lists the contents of the directory specified in the
+             directory path based on the flag and stores it in the hard disk
+             at the specified output file.
+             if flag is 1 then recursive mode
+             if flag is 0 then non-recursive
+Parameters: It takes 3 parameters .i.e the path of the directory to be 
+            displayed, flag and the file path where the output should be stored.
+Return Type: void
+*/
+void v_listdir(char *cPtr_directoryPath, int flag, char *cPtr_outputPath){
+
+}

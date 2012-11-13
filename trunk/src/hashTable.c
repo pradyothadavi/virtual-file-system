@@ -45,19 +45,6 @@ struct hashTableNode *s_createHashTableNode(char *cPtr_fileName,unsigned int ui_
 }
 
 /*
-Function Name: v_loadHashTable
-Description: It loads the hash table with all the files in the file system using
-             the hash function.
-Parameters: It takes inode number and fileName as input
-Return Type: It return's void
-*/
-void v_loadHashTable(struct nAryTreeNode *root){
-
-    v_traverseNAryTreeAux(root,HASHING);
-
-}
-
-/*
 Function Name: ui_calculateHashIndex
 Description: It takes the fileName to be hashed and calculates the hash index
              for the hash table.
