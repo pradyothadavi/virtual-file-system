@@ -14,8 +14,14 @@ Version No : 1.0
 
 #define HASHING 101
 #define BST 102
+#define NONRECURSIVEPRINT 103
+
 #define RECURSIVE 201
 #define NONRECURSIVE 202
+
+#define FILENAME 301
+#define FILEPATH 302
+#define INODENUM 303
 
 struct nAryTreeNode{
     struct fileDescriptor *s_inode;
@@ -40,7 +46,7 @@ struct nAryTreeNode *s_deleteNAryTreeNodeAux(struct nAryTreeNode *);
 
 void v_deleteNAryTreeNode(struct nAryTreeNode *);
 
-void v_traverseNAryTree(struct nAryTreeNode *);
+void v_traverseNAryTree(struct nAryTreeNode *,int);
 
 void v_traverseNAryTreeAux(struct nAryTreeNode *,int);
 

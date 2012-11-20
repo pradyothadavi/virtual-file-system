@@ -32,7 +32,7 @@ struct freeList *s_dataBlockFreeList = NULL;
 struct freeList *s_inodeBlockFreeList = NULL;
 struct nAryTreeNode *sPtr_rootNAryTree = NULL;
 struct binarySearchTree *sPtr_rootBST = NULL;
-
+char *cPtr_nameOfVfsMounted = NULL;
 /*
 Function Name: create_vfs
 Description: It creates a file system with the specified name and specified 
@@ -315,6 +315,9 @@ void mount_vfs(const char *vfsLabel){
          printf("%s \n",ERR_VFS_MOUNT_02);
     }
 
+    cPtr_nameOfVfsMounted = (char *)malloc(sizeof(char)*31);
+    strcpy(cPtr_nameOfVfsMounted,vfsLabel);
+
     sPtr_superBlock = &s_superBlock;
 
     /* Create a list a free data blocks.
@@ -330,20 +333,19 @@ void mount_vfs(const char *vfsLabel){
                            VFS_INODE_STARTBLOCK+s_superBlock.ui_noOfUsedFileDescriptors,
                            s_superBlock.ui_maxNoOfFileDescriptors);
 
-#if DEBUG
-    v_displayList(s_dataBlockFreeList);
-    v_displayList(s_inodeBlockFreeList);
-#endif
     /* Load the file system into the n-Ary Tree */
     sPtr_rootNAryTree = s_loadFileSystem(VFS_ROOT_INODE,fpVfs,sPtr_superBlock);
-
-#if DEBUG
-    printf("DEBUG: Root Pointer : %d \n",sPtr_rootNAryTree->s_inode->ui_inodeNo);
-    v_traverseNAryTree(sPtr_rootNAryTree);
-#endif
 
     v_initializeHashTable();
     v_traverseNAryTreeAux(sPtr_rootNAryTree,HASHING);
     v_traverseNAryTreeAux(sPtr_rootNAryTree->leftChild,BST);
 
 }
+
+/*
+Function Name:
+Description:
+Parameters:
+Return Type:
+*/
+

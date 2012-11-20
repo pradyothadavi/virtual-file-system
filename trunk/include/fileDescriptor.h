@@ -14,7 +14,7 @@ Version No : 1.0
 
 struct fileDescriptor{
     char cptr_fileName[VFS_NAMELEN];
-    char cptr_filePath[VFS_NAMELEN];
+    char cptr_filePath[VFS_FILEPATHLEN];
     char c_fileType[FILE_CHARACTERS];
     unsigned int ui_inodeNo;
     unsigned int ui_fileSize;

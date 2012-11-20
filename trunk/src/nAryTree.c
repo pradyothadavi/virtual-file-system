@@ -204,12 +204,17 @@ struct nAryTreeNode * s_insertNAryTreeNode(struct nAryTreeNode *root,struct nAry
 /*
 Function Name: v_traverseNAryTree
 Description: It traverses the n-Ary Tree from the node pointed by the pointer
-             which is passed as a parameter.
-Parameters : It takes a single parameter, which is the pointer to a particular
-             node in the n-Ary Tree.
+             which is passed as a parameter and prints the a field in the nAry
+             tree based on a particular mode.
+Parameters : It takes a 2 parameter.
+             1) A pointer to a particular node in the n-Ary Tree.
+             2) Mode of traversal
+                FILENAME
+                FILEPATH
+                INODE
 Return Type: It returns void
 */
-void v_traverseNAryTree(struct nAryTreeNode *ptrToANode){
+void v_traverseNAryTree(struct nAryTreeNode *ptrToANode,int i_mode){
     struct nAryTreeNode *temp = NULL;
 
     temp = ptrToANode;
@@ -217,11 +222,15 @@ void v_traverseNAryTree(struct nAryTreeNode *ptrToANode){
     if(NULL == temp){
          return;
     } else {
-         v_traverseNAryTree(temp->leftChild);
-#if 1
-    printf("DEBUG: FD No : %d \n",temp->s_inode->ui_inodeNo);
-#endif
-         v_traverseNAryTree(temp->rightSibling);
+         v_traverseNAryTree(temp->leftChild,i_mode);
+         if( i_mode == FILENAME ){
+              printf("DEBUG: FILENAME : %s \n",temp->s_inode->cptr_fileName);
+         } else if ( i_mode == FILEPATH ){
+              printf("DEBUG: FILEPATH : %s \n",temp->s_inode->cptr_filePath);
+         } else if ( i_mode == INODENUM ){
+              printf("DEBUG: FD : %d \n",temp->s_inode->ui_inodeNo);
+         }
+         v_traverseNAryTree(temp->rightSibling,i_mode);
     }
 }
 
@@ -273,18 +282,27 @@ Return Type: It return a pointer to the node if the file is found in the
 struct nAryTreeNode *s_searchNAryTreeNode(struct nAryTreeNode *ptrToANode,char *cPtr_fileName,int mode){
 
     struct nAryTreeNode *temp = NULL;
-
+    struct nAryTreeNode *retNode = NULL;
     /* Assign temp to the root Node */
     temp = ptrToANode;
 
     if( RECURSIVE == mode){
-         
-         if( NULL != temp ){
-              if( (0 == strcmp(temp->s_inode->cptr_fileName,cPtr_fileName)) ){
+         if( NULL == temp ){
+              return NULL;
+         }
+
+         if( 0 == strcmp(temp->s_inode->cptr_fileName,cPtr_fileName) ){
+              return temp;
+         }
+      
+         temp = temp->leftChild;
+         for( ;temp->rightSibling != NULL;temp = temp->rightSibling ){
+              if( (retNode = s_searchNAryTreeNode(temp,cPtr_fileName,RECURSIVE)) != NULL ){
                    return temp;
               }
-              s_searchNAryTreeNode(temp->leftChild,cPtr_fileName,mode);
-              s_searchNAryTreeNode(temp->rightSibling,cPtr_fileName,mode);
+              if( retNode == NULL ){
+
+              }
          }
     }
     

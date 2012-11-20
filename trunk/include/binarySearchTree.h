@@ -8,7 +8,7 @@
 #define FILEPATH 302
 
 struct binarySearchTree{
-    char cArr_filePath[VFS_NAMELEN];
+    char cArr_filePath[VFS_FILEPATHLEN];
     unsigned int ui_inodeNo;
     struct binarySearchTree *parent;
     struct binarySearchTree *leftChild;
