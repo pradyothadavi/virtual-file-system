@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "binarySearchTree.h"
+#include "nAryTree.h"
  
 /*
 Function Name: s_insertBSTNode
@@ -25,17 +26,21 @@ struct binarySearchTree *s_insertBSTNode(struct binarySearchTree *sPtr_root,
 
     while(currentNode != NULL){
          previousNode = currentNode;
-         if( strcmp(sPtr_root->cArr_filePath,currentNode->cArr_filePath) < 0 ){
+         if( 0 == strcmp(currentNode->cArr_filePath,sPtr_node->cArr_filePath) ){
+              return sPtr_root;
+         } 
+         if( strcmp(currentNode->cArr_filePath,sPtr_node->cArr_filePath) > 0 ){
               currentNode = currentNode->leftChild;
          } else {
               currentNode = currentNode->rightChild;
          }
     }
-    sPtr_root->parent = previousNode;
+ 
+    sPtr_node->parent = previousNode;
 
     if(NULL == previousNode){
          sPtr_root = sPtr_node;
-    } else if( strcmp(sPtr_root->cArr_filePath,previousNode->cArr_filePath) < 0 ){
+    } else if(strcmp(previousNode->cArr_filePath,sPtr_node->cArr_filePath) >0 ){
          previousNode->leftChild = sPtr_node;
     } else {
          previousNode->rightChild = sPtr_node;
@@ -57,11 +62,13 @@ struct binarySearchTree *s_getBSTNode(char *filePath,unsigned int ui_inodeNo){
 
     struct binarySearchTree *tempNode = NULL;
 
-    tempNode = (struct binarySearchTree *)malloc(sizeof(struct binarySearchTree)*1);
+    if( 0 == strcmp(filePath,"/") ){
+         return tempNode;
+    }
+    tempNode=(struct binarySearchTree *)malloc(sizeof(struct binarySearchTree)*1);
 
     if( '/' == *(filePath) ){
          strcpy(tempNode->cArr_filePath,filePath+1);
-         printf("Inside BST Node %s \n",filePath+1);
     } else {
          strcpy(tempNode->cArr_filePath,filePath);
     }
@@ -83,6 +90,7 @@ Parameters: It takes a pointer to the node from which the traversal has to
             begin.
             Mode = INODE, then prints Inode Numbers
             Mode = FILEPATH, then prints filePath
+            Mode = UNMOUNT, stores the directory entries of directory
 Return Type: void
 */
 void v_traverseBST(struct binarySearchTree *sPtr_root,int mode){
@@ -97,6 +105,12 @@ void v_traverseBST(struct binarySearchTree *sPtr_root,int mode){
          }
          if( FILEPATH == mode ){
               printf("FILEPATH: %s \n",tempNode->cArr_filePath);
+         }
+         if( UNMOUNT == mode ){
+              v_storeDirectoryEntries(tempNode,mode);
+         }
+         if( UNMOUNTVERIFICATION == mode ){
+              v_storeDirectoryEntries(tempNode,mode);
          }
          v_traverseBST(tempNode->rightChild,mode);
     }
@@ -208,4 +222,49 @@ struct binarySearchTree *s_getLeftMostBSTNode(struct binarySearchTree *sPtr_node
     }
 
     return tempNode;
+}
+
+/*
+Function Name:
+Description:
+Parameters:
+Return Type:
+*/
+void v_storeDirectoryEntries(struct binarySearchTree *sPtr_toANode,int mode){
+
+    char *cPtr_filePath = NULL;
+    char *cPtr_token = NULL;
+
+    struct nAryTreeNode *currentNode = NULL;
+    struct nAryTreeNode *previousNode = NULL;
+
+    if(NULL == sPtr_toANode){
+         return;
+    }
+    currentNode = sPtr_rootNAryTree;
+    cPtr_filePath = (char *)malloc(sizeof(char)*strlen(sPtr_toANode->cArr_filePath));
+    memset((void *)cPtr_filePath,'\0',sizeof(char)*strlen(sPtr_toANode->cArr_filePath));
+    strcpy(cPtr_filePath,sPtr_toANode->cArr_filePath);
+
+    cPtr_token = strtok(cPtr_filePath,"/");
+    while( cPtr_token != NULL ){
+         previousNode = currentNode;
+         currentNode = s_searchNAryTreeNode(currentNode,cPtr_token,NONRECURSIVE);
+         /* Note this case should occur only if the BST is not updated w.r.t
+            n-Ary Tree, as initially BST is build from n-Ary Tree only
+         */
+         if( NULL == currentNode ){
+              return;
+         }
+         cPtr_token = strtok(NULL,"/");
+    }
+    if( (currentNode->s_inode->c_fileType[0] == 'd') &&
+        (currentNode->s_inode->ui_inodeNo == sPtr_toANode->ui_inodeNo) ){
+         if( UNMOUNT == mode ){
+              currentNode = s_searchNAryTreeNode(currentNode,NULL,UNMOUNTVFS);
+         }
+         if( UNMOUNTVERIFICATION == mode ){
+              currentNode = s_searchNAryTreeNode(currentNode,NULL,UNMOUNTVFSVERIFICATION);
+         }
+    }
 }

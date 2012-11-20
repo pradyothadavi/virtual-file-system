@@ -1,12 +1,9 @@
-createvfs demo 1024
+createvfs demo 220
 mountvfs demo
 makedir / dir1
-makedir / dir1
+makedir / dir2
 makedir /dir1 dir3
-makedir /dir1 dir1
-makedir /dir1/dir3 dir4
-makedir /dir1/dir3 dir5
-makedir /dir1/dir3/dir5 dir6
-makedir /dir1/dir3/dir5 dir7
-makedir /dir1/dir3/dir5 dir8
-makedir /dir1/dir3/dir5 dir9
+makedir /dir2 dir4
+makedir /dir2/dir4 dir5
+unmountvfs demo
+mountvfs demo

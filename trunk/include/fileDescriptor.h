@@ -8,9 +8,13 @@ Version No : 1.0
 
 /* This header file has the datatype definitions for File Decriptors */
 
-#include "limits.h"
-#include "block.h"
-#include "fileSystemOps.h"
+#define VFS_NAMELEN 32
+
+#define VFS_FILEPATHLEN 32
+
+#define VFS_DIRECT_DATABLOCK 16
+
+#define FILE_CHARACTERS 2
 
 struct fileDescriptor{
     char cptr_fileName[VFS_NAMELEN];

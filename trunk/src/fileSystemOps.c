@@ -5,25 +5,22 @@
            3) UnmountVfs
 */
 
+/*
+Group No : 28
+Version No : 1.0
+*/
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<sys/types.h>
 #include<unistd.h>
 #include<string.h>
 
-#include "freeList.h"
-#include "fileSystemOps.h"
-#include "fileDescriptor.h"
-#include "mainHeader.h"
-#include "nAryTree.h"
 #include "global.h"
+#include "fileSystemOps.h"
+#include "block.h"
+#include "freeList.h"
 #include "vfs_errorcodes.h"
-#include "binarySearchTree.h"
-
-/*
-Group No : 28
-Version No : 1.0
-*/
 
 /* Pointers to different data structures, which will be used by most of the
    modules which execute different commands.
@@ -33,8 +30,9 @@ struct freeList *s_inodeBlockFreeList = NULL;
 struct nAryTreeNode *sPtr_rootNAryTree = NULL;
 struct binarySearchTree *sPtr_rootBST = NULL;
 char *cPtr_nameOfVfsMounted = NULL;
+
 /*
-Function Name: create_vfs
+Function Name: v_createvfs
 Description: It creates a file system with the specified name and specified 
              size.
 Parameters: It takes two parameters
@@ -42,35 +40,55 @@ Parameters: It takes two parameters
             2)size, which is the size of the VFS ( in KB )
 Return Type: void
 */
-void create_vfs(const char *vfsLabel,unsigned int ui_size){
+int i_createvfs(char *vfsLabel,unsigned int ui_size){
+
+    FILE *fpVfs = NULL;
 
     struct mainHeader s_superBlock;
     struct fileDescriptor s_inode;
     struct dataBlock s_block;
     struct directoryEntry s_dientry;
 
+    char *cPtr_token = NULL;
+
     int i = 0;
     int j = 0;
     int i_retVal = 0;
 
-#if DEBUG
+#if SUPERBLOCK
     struct mainHeader s_testSuperBlock;
     struct fileDescriptor s_testInode;
 #endif
 
-    FILE *fpVfs = NULL;
+    /* If the data file is already present */
+    if( NULL != (fpVfs = fopen(vfsLabel,"r")) ){
+         printf("createvfs_FAILURE %s \n",ERR_VFS_CREATE_01);
+         return FAILURE;
+    }    
 
-    /* Error handling, to check for a valid name of Vfs */
-
-    /* Validate the size of Vfs */
-    if( ui_size <= 0){
-         printf("%s \n",ERR_VFS_CREATE_05);
-         exit(1);
+    /* Cannot Create the data file */
+    if((fpVfs = fopen(vfsLabel,"wb+")) == NULL){
+         printf("createvfs_FAILURE %s \n",ERR_VFS_CREATE_02);
+         return FAILURE;
     }
 
-    if((fpVfs = fopen(vfsLabel,"wb+")) == NULL){
-         printf("%s \n",ERR_VFS_CREATE_02);
-         exit(1);
+    /* Invalid name, .i.e if '/' is present */
+    if( NULL != (cPtr_token = strtok(vfsLabel,"/")) && 
+        0 < strcmp(cPtr_token,vfsLabel) ){
+         printf("createvfs_FAILURE %s \n",ERR_VFS_CREATE_04);
+         return FAILURE;
+    }   
+    
+    /* Validate the size of Vfs */
+    if( ui_size <= 0 || ui_size > 1024 ){
+         printf("createvfs_FAILURE %s \n",ERR_VFS_CREATE_05);
+         return FAILURE;
+    }
+
+    /* Label should not exceed 30 characters */
+    if( 30 < strlen(vfsLabel) ){
+         printf("createvfs_FAILURE %s \n",ERR_VFS_CREATE_07);
+         return FAILURE;
     }
 
     /* Convert the file size into bytes */
@@ -79,21 +97,21 @@ void create_vfs(const char *vfsLabel,unsigned int ui_size){
     /* Total Blocks is total size divided by size of each block when size is in bytes */
     s_superBlock.ui_totalBlocks = ui_size/VFS_BLOCKSIZE;
 
-    /* Validation Check If the file pointer can move to the end of the file or not */
-    if((fseek(fpVfs,(long)s_superBlock.ui_totalBlocks*VFS_BLOCKSIZE,SEEK_SET)) == -1){
-         printf(" %s \n",ERR_VFS_CREATE_03);
-         exit(1);
-    }
+    /* Validation Check If the file pointer can move to the end of the file or not 
+    if((fseek(fpVfs,(long)s_superBlock.ui_totalBlocks*VFS_BLOCKSIZE,SEEK_SET)) != 1){
+         printf("createvfs_FAILURE %s \n",ERR_VFS_CREATE_03);
+         return FAILURE;
+    }*/
 
-    /* Set the file pointer to the initial position of the file */
+    /* Set the file pointer to the initial position of the file
     if((fseek(fpVfs,(long)0,SEEK_SET)) == -1){
-         printf(" %s \n",ERR_VFS_CREATE_03);
-         exit(1);
-    }
+         printf("createvfs_FALURE %s \n",ERR_VFS_CREATE_03);
+         return FAILURE;
+    }*/
 
     /* Creating a file of the mentioned size by writing the total no.of.blocks */
     for(i = 0; i < s_superBlock.ui_totalBlocks; i++){
-         memset((void *)&s_block,0,VFS_BLOCKSIZE);
+         memset((void *)&s_block,'\0',VFS_BLOCKSIZE);
          fwrite(&s_block,sizeof(struct dataBlock),1,fpVfs);
     }
 
@@ -185,7 +203,7 @@ void create_vfs(const char *vfsLabel,unsigned int ui_size){
     /* Initialize the lost+found directory */
     memset((void *)&s_inode,0,sizeof(struct fileDescriptor));
     strcpy(s_inode.cptr_fileName,"lost+found");
-    strcpy(s_inode.cptr_filePath,"/lost+found");
+    strcpy(s_inode.cptr_filePath,"/lost+found/");
     s_inode.c_fileType[0]='d';
     s_inode.c_fileType[1]='\0';
     s_inode.ui_inodeNo = 5;
@@ -213,7 +231,7 @@ void create_vfs(const char *vfsLabel,unsigned int ui_size){
          printf("ERROR: Error In Fetching A Data Block \n");
     }
 
-#if DEBUG
+#if SUPERBLOCK
     fseek(fpVfs,0,SEEK_SET);
     if((i_retVal=fread(&s_testSuperBlock,sizeof(struct mainHeader),1,fpVfs)) != 1){
          printf("DEBUG: Error in reading superblock \n");   
@@ -282,18 +300,20 @@ void create_vfs(const char *vfsLabel,unsigned int ui_size){
     }
 #endif
     fclose(fpVfs);
+
+    return SUCCESS;
 }
 
 
 /*
-Function Name: mount_vfs
+Function Name: i_mountvfs
 Description: This function loaded the specified file system into the main 
              memory by representing the information of the file system
              with various data structures.
 Parameters: It takes the name of the file system to be loaded.
 Return Type: void
 */
-void mount_vfs(const char *vfsLabel){   
+int i_mountvfs(const char *vfsLabel){   
     
     struct mainHeader s_superBlock;
     struct mainHeader * sPtr_superBlock;
@@ -302,24 +322,26 @@ void mount_vfs(const char *vfsLabel){
 
     FILE *fpVfs;
 
-    if((fpVfs = fopen(vfsLabel,"rb+")) == NULL){
-         printf("%s \n",ERR_VFS_MOUNT_01);
-         exit(1);
+    if((fpVfs = fopen(vfsLabel,"r")) == NULL){
+         printf("mountvfs_FAILURE %s \n",ERR_VFS_MOUNT_01);
+         return FAILURE;      
     }
 
     if((fseek(fpVfs,0,SEEK_SET)) == -1){
-         printf("%s \n",ERR_VFS_MOUNT_02);
+         printf("mountvfs_FAILURE %s \n",ERR_VFS_MOUNT_02);
+         return FAILURE;
     }
 
     if((i_retVal = fread(&s_superBlock,sizeof(struct mainHeader),1,fpVfs)) != 1){
-         printf("%s \n",ERR_VFS_MOUNT_02);
+         printf("mountvfs_FAILURE %s \n",ERR_VFS_MOUNT_03);
+         return FAILURE;
     }
 
-    cPtr_nameOfVfsMounted = (char *)malloc(sizeof(char)*31);
+    cPtr_nameOfVfsMounted = (char *)malloc(sizeof(char)*(VFSLABELLEN+1));
     strcpy(cPtr_nameOfVfsMounted,vfsLabel);
+    *(cPtr_nameOfVfsMounted + strlen(vfsLabel) + 1) = '\0';
 
     sPtr_superBlock = &s_superBlock;
-
     /* Create a list a free data blocks.
        Note: Value 2 is added because 2 data blocks have already been used for
              storing the directory entries of root and lost+found folder.
@@ -335,11 +357,15 @@ void mount_vfs(const char *vfsLabel){
 
     /* Load the file system into the n-Ary Tree */
     sPtr_rootNAryTree = s_loadFileSystem(VFS_ROOT_INODE,fpVfs,sPtr_superBlock);
-
+   
+    /* Load the hash table */
     v_initializeHashTable();
     v_traverseNAryTreeAux(sPtr_rootNAryTree,HASHING);
-    v_traverseNAryTreeAux(sPtr_rootNAryTree->leftChild,BST);
 
+    /* Load the Binary Search Tree */
+    v_traverseNAryTreeAux(sPtr_rootNAryTree,BST);
+
+    return SUCCESS;
 }
 
 /*
@@ -348,4 +374,33 @@ Description:
 Parameters:
 Return Type:
 */
+int i_unmountvfs(char *vfsLabel){
+
+    FILE *fpVfs = NULL;
+
+    if( 0 == strcmp(vfsLabel,cPtr_nameOfVfsMounted) ){
+         if( NULL == (fpVfs = fopen(vfsLabel,"r")) ){
+              printf("unmountvfs_FAILURE %s \n",ERR_VFS_UNMOUNT_01);
+              return FAILURE;
+         } else { 
+              fclose(fpVfs);
+         }
+         v_traverseBST(sPtr_rootBST,UNMOUNT);
+         v_traverseNAryTreeAux(sPtr_rootNAryTree,UNMOUNTVFS);
+         /* BST does not have '/' (root) stored in it. So store the directory
+            entries of '/'.
+         */
+         s_searchNAryTreeNode(sPtr_rootNAryTree,NULL,UNMOUNTVFS);
+#if FILESYS_OPS
+         v_traverseBST(sPtr_rootBST,UNMOUNTVERIFICATION);
+         v_traverseNAryTreeAux(sPtr_rootNAryTree,UNMOUNTVFSVERIFICATION);
+         s_searchNAryTreeNode(sPtr_rootNAryTree,NULL,UNMOUNTVFSVERIFICATION);
+#endif         
+    } else {
+         printf("unmountvfs_FAILURE %s \n",ERR_VFS_UNMOUNT_04);
+         return FAILURE;
+    }
+
+    return SUCCESS;
+}
 

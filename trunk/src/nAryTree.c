@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include<sys/types.h>
+#include<unistd.h>
 
 #include "nAryTree.h"
+#include "fileDescriptor.h"
 #include "fileSystemOps.h"
-#include "freeList.h"
 #include "binarySearchTree.h"
-#include "global.h"
+#include "vfs_errorcodes.h"
 
 /*
 Function Name: s_loadFileSystem
@@ -24,7 +26,8 @@ struct nAryTreeNode * s_loadFileSystem(int i_rootInodeNo, FILE * fpVfs,struct ma
     struct nAryTreeNode *currentNode = NULL;
    
     int i_retVal = 0;
-    
+    int i_fpPosition = 0;
+
     if((fseek(fpVfs,i_rootInodeNo*VFS_BLOCKSIZE,SEEK_SET)) == -1){
          printf("ERROR: Cannot fetch the Inode Block \n");
     }
@@ -40,36 +43,38 @@ struct nAryTreeNode * s_loadFileSystem(int i_rootInodeNo, FILE * fpVfs,struct ma
     if(s_inode.c_fileType[0] == 'd'){
          if((fseek(fpVfs,s_inode.ui_locationDataBlockNo[0]*VFS_BLOCKSIZE,SEEK_SET)) == -1){
               printf("ERROR: Cannot fetch the Data Block \n");
-         }
-         
+         }         
          do{
               if((i_retVal=fread(&s_dientry,sizeof(struct directoryEntry),1,fpVfs)) != 1){
                    printf("ERROR: Cannot read the dientry block \n");
               }
+              i_fpPosition = ftell(fpVfs);
               if(s_dientry.ui_inodeNo > 0){
                    currentNode = s_createNAryTreeNode(s_dientry.ui_inodeNo,fpVfs);
                    root = s_insertNAryTreeNode(root,currentNode);
               }       
-              
+              if((fseek(fpVfs,i_fpPosition,SEEK_SET)) == -1){
+                   printf("ERROR: Cannot fetch the Data Block \n");
+              }
          }while(s_dientry.ui_inodeNo != 0);
     }
  
-    root = s_loadFileSystemAux(root, fpVfs);
+    v_loadFileSystemAux(root->leftChild, fpVfs);
 
     return root;
 }
 
 
 /*
-Funtion Name: s_loadFileSystemAux
+Funtion Name: v_loadFileSystemAux
 Description: The function helps in building the subtree of the n-Ary Tree which
              represents the file system mounted
 Parameters: It takes two pointers.
             a) Pointer to a node in the n-Ary Tree
             b) File pointer to the file system to be loaded into the main memory.
-Return Type: It returns a pointer which points to the root of the n-Ary subtree.
+Return Type: void
 */
-struct nAryTreeNode * s_loadFileSystemAux(struct nAryTreeNode *nodePtr, FILE *fpVfs){
+void v_loadFileSystemAux(struct nAryTreeNode *nodePtr, FILE *fpVfs){
 
     struct nAryTreeNode *temp;
     struct nAryTreeNode *currentNode;
@@ -77,42 +82,36 @@ struct nAryTreeNode * s_loadFileSystemAux(struct nAryTreeNode *nodePtr, FILE *fp
     struct directoryEntry s_dientry;
 
     int i_retVal = 0;
+    int i_fpPosition = 0;
 
     temp = nodePtr;
 
+    if( NULL == temp ){
+         return;
+    }
     /* Move One Level Down */
-    if(temp->leftChild != NULL){
-         temp = temp->leftChild;
-       
-         while( (temp->s_inode->c_fileType[0] != 'd') && (temp->rightSibling != NULL) ){
-              temp = temp->rightSibling;
-         }
-        
-         if( (temp->rightSibling == NULL) && (temp->s_inode->c_fileType[0] != 'd') ){
-              return temp->parent;
-         }else{
-         
-              if(temp->s_inode->c_fileType[0] == 'd'){
-                   if((fseek(fpVfs,temp->s_inode->ui_locationDataBlockNo[0]*VFS_BLOCKSIZE,SEEK_SET)) == -1){
+    if(temp != NULL){
+         if(temp->s_inode->c_fileType[0] == 'd'){
+              if((fseek(fpVfs,temp->s_inode->ui_locationDataBlockNo[0]*VFS_BLOCKSIZE,SEEK_SET)) == -1){
+                   printf("ERROR: Cannot fetch the Data Block \n");
+              }
+              do{
+                   if((i_retVal=fread(&s_dientry,sizeof(struct directoryEntry),1,fpVfs)) != 1){
+                        printf("ERROR: Cannot read the dientry block \n");
+                   }
+                   i_fpPosition = ftell(fpVfs);
+                   if(s_dientry.ui_inodeNo > 0){
+                        currentNode = s_createNAryTreeNode(s_dientry.ui_inodeNo,fpVfs);
+                        temp = s_insertNAryTreeNode(temp,currentNode);
+                   }          
+                   if((fseek(fpVfs,i_fpPosition,SEEK_SET)) == -1){
                         printf("ERROR: Cannot fetch the Data Block \n");
                    }
-         
-                   do{
-                        if((i_retVal=fread(&s_dientry,sizeof(struct directoryEntry),1,fpVfs)) != 1){
-                             printf("ERROR: Cannot read the dientry block \n");
-                        }
-                        if(s_dientry.ui_inodeNo > 0){
-                             currentNode = s_createNAryTreeNode(s_dientry.ui_inodeNo,fpVfs);
-                             temp = s_insertNAryTreeNode(temp,currentNode);
-                        }          
-   
-                   }while(s_dientry.ui_inodeNo != 0);
-              }
-              temp = s_loadFileSystemAux(temp,fpVfs);
-         }
+              }while(s_dientry.ui_inodeNo != 0);
+         }         
     }
-
-    return nodePtr;
+    v_loadFileSystemAux(temp->leftChild,fpVfs);
+    v_loadFileSystemAux(temp->rightSibling,fpVfs);
 }
 
 /*
@@ -224,11 +223,11 @@ void v_traverseNAryTree(struct nAryTreeNode *ptrToANode,int i_mode){
     } else {
          v_traverseNAryTree(temp->leftChild,i_mode);
          if( i_mode == FILENAME ){
-              printf("DEBUG: FILENAME : %s \n",temp->s_inode->cptr_fileName);
+              printf("FILENAME : %s \n",temp->s_inode->cptr_fileName);
          } else if ( i_mode == FILEPATH ){
-              printf("DEBUG: FILEPATH : %s \n",temp->s_inode->cptr_filePath);
+              printf("FILEPATH : %s \n",temp->s_inode->cptr_filePath);
          } else if ( i_mode == INODENUM ){
-              printf("DEBUG: FD : %d \n",temp->s_inode->ui_inodeNo);
+              printf("FD : %d \n",temp->s_inode->ui_inodeNo);
          }
          v_traverseNAryTree(temp->rightSibling,i_mode);
     }
@@ -248,22 +247,54 @@ void v_traverseNAryTreeAux(struct nAryTreeNode *ptrToANode,int i_mode){
     struct nAryTreeNode *temp = NULL;
     struct binarySearchTree *tempNode = NULL;
 
+    unsigned int ui_index = 0;
+
+    FILE *fpVfs = NULL;
+
     temp = ptrToANode;
 
     if(NULL == temp){
          return;
     } else {
          v_traverseNAryTreeAux(temp->leftChild,i_mode);
-         if(HASHING == i_mode){
-              if(temp->s_inode->c_fileType[0] == 'r'){
-                   int ui_index = 0;
-                   ui_index = ui_calculateHashIndex(temp->s_inode->cptr_fileName);
-                   v_hashFile(ui_index,temp->s_inode->cptr_fileName,temp->s_inode->ui_inodeNo);
-              }
+         if(HASHING == i_mode){                  
+              ui_index = ui_calculateHashIndex(temp->s_inode->cptr_fileName);
+              v_hashFile(ui_index,temp->s_inode->cptr_fileName,temp->s_inode->ui_inodeNo);
          }
          if( BST == i_mode ){
               tempNode = s_getBSTNode(temp->s_inode->cptr_filePath,temp->s_inode->ui_inodeNo);
-              sPtr_rootBST = s_insertBSTNode(sPtr_rootBST,tempNode);         
+              if( NULL != tempNode ){
+                   sPtr_rootBST = s_insertBSTNode(sPtr_rootBST,tempNode);
+              }         
+         }
+         if( UNMOUNTVFS == i_mode ){
+              if( NULL == (fpVfs = fopen(cPtr_nameOfVfsMounted,"rb+")) ){
+                   printf("unmountvfs_FAILURE %s \n",ERR_VFS_UNMOUNT_02);
+                   return;
+              }
+              fseek(fpVfs,temp->s_inode->ui_inodeNo*VFS_BLOCKSIZE,SEEK_SET);
+              if( (fwrite(temp->s_inode,sizeof(struct fileDescriptor),1,fpVfs)) != 1){
+                   printf("unmountvfs_FAILURE %s \n",ERR_VFS_UNMOUNT_03);
+                   return;
+              }
+              fclose(fpVfs);       
+         }
+         if( UNMOUNTVFSVERIFICATION == i_mode ){
+              if( NULL == (fpVfs = fopen(cPtr_nameOfVfsMounted,"rb+")) ){
+                   printf("unmountvfs_FAILURE %s \n",ERR_VFS_UNMOUNT_02);
+                   return;
+              }
+              fseek(fpVfs,temp->s_inode->ui_inodeNo*VFS_BLOCKSIZE,SEEK_SET);
+              if( (fread(temp->s_inode,sizeof(struct fileDescriptor),1,fpVfs)) != 1){
+                   printf("unmountvfs_FAILURE %s \n",ERR_VFS_UNMOUNT_03);
+                   return;
+              }
+              printf("DEBUG: Details of FD %d \n",temp->s_inode->ui_inodeNo);
+              printf("       FILE NAME %s \n",temp->s_inode->cptr_fileName);
+              printf("       FILE PATH %s \n",temp->s_inode->cptr_filePath);
+              printf("       FILE TYPE %c \n",temp->s_inode->c_fileType[0]);
+              printf("       DATA BLOCK NO %u \n",temp->s_inode->ui_locationDataBlockNo[0]);
+              fclose(fpVfs);       
          }
          v_traverseNAryTreeAux(temp->rightSibling,i_mode);
     }
@@ -281,8 +312,16 @@ Return Type: It return a pointer to the node if the file is found in the
 */
 struct nAryTreeNode *s_searchNAryTreeNode(struct nAryTreeNode *ptrToANode,char *cPtr_fileName,int mode){
 
+    FILE *fpVfs = NULL;
+
     struct nAryTreeNode *temp = NULL;
+    struct nAryTreeNode *childNode = NULL;
     struct nAryTreeNode *retNode = NULL;
+
+    struct directoryEntry s_dientry;
+
+    int i = 0;
+
     /* Assign temp to the root Node */
     temp = ptrToANode;
 
@@ -290,11 +329,9 @@ struct nAryTreeNode *s_searchNAryTreeNode(struct nAryTreeNode *ptrToANode,char *
          if( NULL == temp ){
               return NULL;
          }
-
          if( 0 == strcmp(temp->s_inode->cptr_fileName,cPtr_fileName) ){
               return temp;
          }
-      
          temp = temp->leftChild;
          for( ;temp->rightSibling != NULL;temp = temp->rightSibling ){
               if( (retNode = s_searchNAryTreeNode(temp,cPtr_fileName,RECURSIVE)) != NULL ){
@@ -304,7 +341,7 @@ struct nAryTreeNode *s_searchNAryTreeNode(struct nAryTreeNode *ptrToANode,char *
 
               }
          }
-    }
+    } /* End of recursive mode */
     
     if( NONRECURSIVE == mode ){
          
@@ -321,8 +358,78 @@ struct nAryTreeNode *s_searchNAryTreeNode(struct nAryTreeNode *ptrToANode,char *
               }
               temp = temp->rightSibling;
          }
-    }
-
+    } /* End of non-recursive mode */
+    
+    if( UNMOUNTVFS == mode ){
+         if( NULL == (fpVfs = fopen(cPtr_nameOfVfsMounted,"rb+")) ){
+              printf("unmountvfs_FAILURE %s \n",ERR_VFS_UNMOUNT_02);
+              return temp;
+         }
+         if( NULL != temp && temp->leftChild != NULL){
+              childNode = temp->leftChild;
+              fseek(fpVfs,temp->s_inode->ui_locationDataBlockNo[0]*VFS_BLOCKSIZE,SEEK_SET);
+              s_dientry.ui_inodeNo = 0;
+              memset((void *)&s_dientry.c_fileName,'\0',VFS_NAMELEN);
+              s_dientry.ui_inodeNo = childNode->s_inode->ui_inodeNo;
+              strcpy(s_dientry.c_fileName,childNode->s_inode->cptr_fileName);
+              fwrite(&s_dientry,sizeof(struct directoryEntry),1,fpVfs);              
+         }
+         if( childNode != NULL ){
+              childNode = childNode->rightSibling;
+              while( childNode != NULL){
+                   s_dientry.ui_inodeNo = 0;
+                   memset((void *)&s_dientry.c_fileName,'\0',VFS_NAMELEN);
+                   s_dientry.ui_inodeNo = childNode->s_inode->ui_inodeNo;
+                   strcpy(s_dientry.c_fileName,childNode->s_inode->cptr_fileName);
+                   fwrite(&s_dientry,sizeof(struct directoryEntry),1,fpVfs);
+                   childNode = childNode->rightSibling;
+              }
+         }
+         fclose(fpVfs);
+    } /* end of unmountvfs mode */
+    if( UNMOUNTVFSVERIFICATION == mode ){
+         if( NULL == (fpVfs = fopen(cPtr_nameOfVfsMounted,"rb+")) ){
+              printf("unmountvfs_FAILURE %s \n",ERR_VFS_UNMOUNT_02);
+              return temp;
+         }
+         if( NULL != temp && temp->leftChild != NULL){
+              childNode = temp->leftChild;
+              printf("DEBUG: Directory Entry Details of %s \n",temp->s_inode->cptr_fileName);
+              printf("       INODE NO | DIRECTORY or FILE NAME \n");
+              fseek(fpVfs,temp->s_inode->ui_locationDataBlockNo[0]*VFS_BLOCKSIZE,SEEK_SET);
+              s_dientry.ui_inodeNo = 0;
+              memset((void *)&s_dientry.c_fileName,'\0',VFS_NAMELEN);
+              s_dientry.ui_inodeNo = childNode->s_inode->ui_inodeNo;
+              strcpy(s_dientry.c_fileName,childNode->s_inode->cptr_fileName);
+              fread(&s_dientry,sizeof(struct directoryEntry),1,fpVfs);
+              printf("          %d      ",s_dientry.ui_inodeNo);
+              i = 0;
+              while(s_dientry.c_fileName[i] != '\0'){
+                   printf("%c",s_dientry.c_fileName[i]);
+                   i++;
+              }
+              printf("\n");              
+         }
+         if( childNode != NULL ){
+              childNode = childNode->rightSibling;
+              while( childNode != NULL){
+                   s_dientry.ui_inodeNo = 0;
+                   memset((void *)&s_dientry.c_fileName,'\0',VFS_NAMELEN);
+                   s_dientry.ui_inodeNo = childNode->s_inode->ui_inodeNo;
+                   strcpy(s_dientry.c_fileName,childNode->s_inode->cptr_fileName);
+                   fread(&s_dientry,sizeof(struct directoryEntry),1,fpVfs);
+                   printf("          %d      ",s_dientry.ui_inodeNo);
+                   i = 0;
+                   while(s_dientry.c_fileName[i] != '\0'){
+                        printf("%c",s_dientry.c_fileName[i]);
+                        i++;
+                   }
+                   printf("\n");
+                   childNode = childNode->rightSibling;
+              }
+         }     
+         fclose(fpVfs);
+    } /* end of unmountvfsverification mode */
     return temp;
 }
 

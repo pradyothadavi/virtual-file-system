@@ -6,7 +6,7 @@ Group No: 028
 Version No: 1.0
 */
 
-#include "nAryTree.h"
+#include "global.h"
 
 #define NOOFBUCKETS 26
 

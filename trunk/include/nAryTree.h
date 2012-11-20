@@ -5,12 +5,12 @@
 Group No : 28
 Version No : 1.0
 */
-#include<stdio.h>
-#include<stdlib.h>
-#include<sys/types.h>
-#include<unistd.h>
+#include <stdlib.h>
+
 #include "fileDescriptor.h"
-#include "mainHeader.h"
+#include "fileSystemOps.h"
+
+#define NARY_DEBUG 0
 
 #define HASHING 101
 #define BST 102
@@ -18,6 +18,8 @@ Version No : 1.0
 
 #define RECURSIVE 201
 #define NONRECURSIVE 202
+#define UNMOUNTVFS 203
+#define UNMOUNTVFSVERIFICATION 204
 
 #define FILENAME 301
 #define FILEPATH 302
@@ -32,7 +34,7 @@ struct nAryTreeNode{
 
 struct nAryTreeNode *s_loadFileSystem(int,FILE *,struct mainHeader *);
 
-struct nAryTreeNode * s_loadFileSystemAux(struct nAryTreeNode *, FILE *);
+void v_loadFileSystemAux(struct nAryTreeNode *, FILE *);
 
 struct nAryTreeNode * s_createNAryTreeNode(int,FILE *);
 
