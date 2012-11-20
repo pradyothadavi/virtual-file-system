@@ -10,5 +10,3 @@ makedir /dir1/dir3/dir5 dir6
 makedir /dir1/dir3/dir5 dir7
 makedir /dir1/dir3/dir5 dir8
 makedir /dir1/dir3/dir5 dir9
-deletedir /dir1/dir3/dir5/dir6
-movedir /dir1/dir3/dir5 /dir1/dir1

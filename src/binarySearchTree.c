@@ -59,7 +59,12 @@ struct binarySearchTree *s_getBSTNode(char *filePath,unsigned int ui_inodeNo){
 
     tempNode = (struct binarySearchTree *)malloc(sizeof(struct binarySearchTree)*1);
 
-    strcpy(tempNode->cArr_filePath,filePath);
+    if( '/' == *(filePath) ){
+         strcpy(tempNode->cArr_filePath,filePath+1);
+         printf("Inside BST Node %s \n",filePath+1);
+    } else {
+         strcpy(tempNode->cArr_filePath,filePath);
+    }
     tempNode->ui_inodeNo = ui_inodeNo;
     tempNode->parent = NULL;
     tempNode->leftChild = NULL;

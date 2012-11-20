@@ -8,6 +8,8 @@
 #include "freeList.h"
 #include "global.h"
 #include "vfs_errorcodes.h"
+#include "binarySearchTree.h"
+#include "hashTable.h"
 
 /*
 Function Name: v_makedir
@@ -26,13 +28,18 @@ void v_makedir(char *cPtr_directoryPath,char *cPtr_directoryName){
 
     struct fileDescriptor *s_newInode = NULL;
 
+    struct binarySearchTree *newBSTNode = NULL;
+
     char *cPtr_token = NULL;
     char *cPtr_filePath = NULL;
-    
+    char *cPtr_copyOfDirPath = NULL;
+
     unsigned int ui_inodeNo = 0;
     unsigned int ui_dientryBlockNo = 0;
     unsigned int ui_noOfCharactersParsed = 0;
 
+    cPtr_copyOfDirPath = (char *)malloc(sizeof(char)*strlen(cPtr_directoryPath));
+    strcpy(cPtr_copyOfDirPath,cPtr_directoryPath);
     previousNode = currentNode = sPtr_rootNAryTree;
 
     if( (0 == strcmp(cPtr_directoryPath,"/")) ){
@@ -59,6 +66,10 @@ void v_makedir(char *cPtr_directoryPath,char *cPtr_directoryName){
 
               previousNode = sPtr_rootNAryTree;
               previousNode = s_insertNAryTreeNode(previousNode,currentNode);
+
+              newBSTNode = s_getBSTNode(cPtr_directoryName,ui_inodeNo);
+              sPtr_rootBST = s_insertBSTNode(sPtr_rootBST,newBSTNode);
+
          } else if( 0 == strcmp(currentNode->s_inode->cptr_fileName,cPtr_directoryName)){
               printf("%s \n",ERR_VFS_MAKEDIR_03);
               return;
@@ -66,13 +77,13 @@ void v_makedir(char *cPtr_directoryPath,char *cPtr_directoryName){
     } else {
 
          /* Tokenize the directory path */
-         cPtr_token = strtok(cPtr_directoryPath,"/");
+         cPtr_token = strtok(cPtr_copyOfDirPath,"/");
          while(cPtr_token != NULL){
               previousNode = currentNode;
               /* This variable helps in creating the file path when a new 
                  directory is found.
               */
-              ui_noOfCharactersParsed = strlen(cPtr_token);
+              ui_noOfCharactersParsed = ui_noOfCharactersParsed + strlen(cPtr_token)+1;
               currentNode = s_searchNAryTreeNode(currentNode,cPtr_token,NONRECURSIVE);
               if(NULL == currentNode){
 
@@ -82,9 +93,11 @@ void v_makedir(char *cPtr_directoryPath,char *cPtr_directoryName){
                         /* Get a inode number from the free List */
                         ui_inodeNo = i_getFreeBlock(s_inodeBlockFreeList);
                         /* Path of the directory */
-                        cPtr_filePath = (char *)malloc(sizeof(char)*(ui_noOfCharactersParsed+1));
+                        cPtr_filePath = (char *)malloc(sizeof(char)*((ui_noOfCharactersParsed+strlen(cPtr_token)+2)) );
                         strncpy(cPtr_filePath,cPtr_directoryPath,ui_noOfCharactersParsed);
-                        *(cPtr_filePath + ui_noOfCharactersParsed + 1) = '\0';
+                        strcpy(cPtr_filePath+ui_noOfCharactersParsed,"/");
+                        strcpy(cPtr_filePath+ui_noOfCharactersParsed+1,cPtr_token);
+                        *(cPtr_filePath + ui_noOfCharactersParsed + strlen(cPtr_token) + 2) = '\0';
                         /* Directory Entry Block Number */
                         ui_dientryBlockNo = i_getFreeBlock(s_dataBlockFreeList);
               
@@ -99,7 +112,11 @@ void v_makedir(char *cPtr_directoryPath,char *cPtr_directoryName){
                         previousNode = s_insertNAryTreeNode(currentNode,newNAryNode);
                         currentNode = newNAryNode;
 
-                        ui_noOfCharactersParsed = strlen(cPtr_token)+1;
+                        /* Update Binary Search Tree */
+                        newBSTNode = s_getBSTNode(cPtr_filePath,ui_inodeNo);
+                        sPtr_rootBST = s_insertBSTNode(sPtr_rootBST,newBSTNode);
+
+                        ui_noOfCharactersParsed = ui_noOfCharactersParsed + strlen(cPtr_token)+1;
                         cPtr_token = strtok(NULL,"/");
                    }/* End of Inner while */
                             
@@ -113,13 +130,16 @@ void v_makedir(char *cPtr_directoryPath,char *cPtr_directoryName){
               /* Get a inode number from the free List */
               ui_inodeNo = i_getFreeBlock(s_inodeBlockFreeList);
               /* Path of the directory */
-              cPtr_filePath = (char *)malloc(sizeof(char)*strlen(cPtr_directoryPath));
+              cPtr_filePath = (char *)malloc(sizeof(char)*(strlen(cPtr_directoryPath)+strlen(cPtr_directoryName)+2));
               strcpy(cPtr_filePath,cPtr_directoryPath);
+              strcpy(cPtr_filePath+strlen(cPtr_directoryPath),"/");
+              strcpy(cPtr_filePath+strlen(cPtr_directoryPath)+1,cPtr_directoryName);
+              *(cPtr_filePath + strlen(cPtr_directoryPath) + strlen(cPtr_directoryName) + 2) = '\0';
               /* Directory Entry Block Number */
               ui_dientryBlockNo = i_getFreeBlock(s_dataBlockFreeList);
               
               /* Copy the details into the file descriptor structure */
-              s_newInode = s_createFileDescriptor(cPtr_directoryName,cPtr_directoryPath,'d',ui_inodeNo,0,ui_dientryBlockNo);
+              s_newInode = s_createFileDescriptor(cPtr_directoryName,cPtr_filePath,'d',ui_inodeNo,0,ui_dientryBlockNo);
               
               newNAryNode = s_getNAryTreeNode();
               newNAryNode->s_inode = s_newInode;
@@ -128,6 +148,11 @@ void v_makedir(char *cPtr_directoryPath,char *cPtr_directoryName){
               newNAryNode->rightSibling = NULL;
               previousNode = s_insertNAryTreeNode(currentNode,newNAryNode);
               currentNode = newNAryNode;
+
+              /* Update Binary Search Tree */
+              printf(" BST PATH %s when makdir path is %s \n",cPtr_filePath,cPtr_directoryPath);
+              newBSTNode = s_getBSTNode(cPtr_filePath,ui_inodeNo);
+              sPtr_rootBST = s_insertBSTNode(sPtr_rootBST,newBSTNode);
 
          } else if( 0 == strcmp(currentNode->s_inode->cptr_fileName,cPtr_directoryName)){
               printf("%s \n",ERR_VFS_MAKEDIR_03);
@@ -148,7 +173,7 @@ void v_deletedir(char *cPtr_directoryPath){
 
     struct nAryTreeNode *previousNode = NULL;
     struct nAryTreeNode *currentNode = NULL;
-
+    struct binarySearchTree *nodeToBeDeleted = NULL;
     char *cPtr_token = NULL;
 
     previousNode = currentNode = sPtr_rootNAryTree;
@@ -197,6 +222,10 @@ void v_deletedir(char *cPtr_directoryPath){
               previousNode = previousNode->rightSibling;
          }
          previousNode->rightSibling = currentNode->rightSibling;
+    }
+    nodeToBeDeleted = s_searchBSTNode(sPtr_rootBST,currentNode->s_inode->cptr_filePath);
+    if( nodeToBeDeleted != NULL ){
+         v_deleteBSTNode(sPtr_rootBST,nodeToBeDeleted);
     }
     v_deleteNAryTreeNode(currentNode);
 }
@@ -310,4 +339,131 @@ Return Type: void
 */
 void v_listdir(char *cPtr_directoryPath, int flag, char *cPtr_outputPath){
 
+    struct nAryTreeNode *currentNode = NULL;
+    struct nAryTreeNode *previousNode = NULL;
+    struct nAryTreeNode *tempNode = NULL;
+    struct hashTableNode *directoryList = NULL;
+
+    FILE *fp = NULL;
+
+    char *cPtr_token = NULL;
+
+    if ( (flag < 0) || (flag > 1) ){
+         printf("lisrdir_FAILURE %s \n",ERR_VFS_LISTDIR_02);
+         return;
+    }
+
+    if( (fp = fopen(cPtr_outputPath,"r")) == NULL){
+         printf("listdir_FAILURE %s \n",ERR_VFS_LISTDIR_03);
+         return;
+    } else {
+         fclose(fp);
+    }
+
+    currentNode = sPtr_rootNAryTree;
+    
+    if( 0 == strcmp(cPtr_directoryPath,"/")){
+         previousNode = currentNode;
+    } else {
+         cPtr_token = strtok(cPtr_directoryPath,"/");
+         while(cPtr_token != NULL){
+              previousNode = currentNode;
+              currentNode = s_searchNAryTreeNode(currentNode,cPtr_token,NONRECURSIVE);
+              if(NULL == currentNode){
+                   printf("lisrdir_FAILURE %s \n",ERR_VFS_LISTDIR_01);
+                   return;
+              }
+              cPtr_token = strtok(NULL,"/");
+         }
+    }
+
+    if( 0 == flag ){
+         directoryList = s_storeDirectoryNames(cPtr_outputPath,currentNode,NULL);
+    } else {
+         previousNode = currentNode;
+         do{
+              directoryList = s_storeDirectoryNames(cPtr_outputPath,currentNode,directoryList);
+              /* Cross verify this logic */
+              if( directoryList != NULL ){
+                   currentNode = s_searchNAryTreeNode(previousNode,directoryList->c_fileName,RECURSIVE); 
+                   directoryList = directoryList->sPtr_nextNode;
+              } else {
+                   currentNode = NULL;
+              }  
+         } while( directoryList != NULL || tempNode != NULL );
+    }
+}
+
+/*
+Function Name:
+Description:
+Parameters:
+Return Type:
+*/
+struct hashTableNode *s_storeDirectoryNames(char *cPtr_outputPath,
+                                            struct nAryTreeNode *sPtr_node,
+                                            struct hashTableNode *headPtrOfDirList){
+
+    FILE *fp = NULL;
+
+    struct nAryTreeNode *currentNode = NULL;
+    struct hashTableNode *dirList = NULL;
+    struct hashTableNode *temp = NULL;
+    struct hashTableNode *current = NULL;
+
+    int i_count = -1;
+
+    if( NULL == (fp = fopen(cPtr_outputPath,"a+")) ){
+         printf("ERROR: Cannot Open File In Append Mode \n");
+         return dirList;
+    }
+
+    currentNode = sPtr_node;
+    dirList = headPtrOfDirList;
+    if( (NULL != currentNode) && (NULL != currentNode->leftChild) ){
+         fprintf(fp,"\n Contents of %s/%s : \n ",currentNode->s_inode->cptr_filePath,currentNode->s_inode->cptr_fileName);
+         currentNode = currentNode->leftChild;
+         fprintf(fp,"%s ",currentNode->s_inode->cptr_fileName);
+         i_count++;
+         if( currentNode->s_inode->c_fileType[0] == 'd' ){
+              if(NULL == dirList){
+                   dirList = s_createHashTableNode(currentNode->s_inode->cptr_fileName,
+                                                   currentNode->s_inode->ui_inodeNo);
+              } else {
+                   temp = s_createHashTableNode(currentNode->s_inode->cptr_fileName,
+                                                   currentNode->s_inode->ui_inodeNo);
+                   current = dirList;
+                   while(current->sPtr_nextNode != NULL){
+                        current = current->sPtr_nextNode;
+                   }
+                   current->sPtr_nextNode = temp;
+              } /* End of inner if-else */
+         } /* end of if( currentNode->s_inode->c_fileType[0] == 'd' ) */
+         while(currentNode->rightSibling != NULL){
+              currentNode = currentNode->rightSibling;
+              fprintf(fp,"%s ",currentNode->s_inode->cptr_fileName);
+              i_count++;
+              if( 2 == i_count){
+                   i_count = 0;
+                   fprintf(fp,"\n");
+              }
+              if( currentNode->s_inode->c_fileType[0] == 'd' ){
+                   if(NULL == dirList){
+                        dirList = s_createHashTableNode(currentNode->s_inode->cptr_fileName,
+                                                   currentNode->s_inode->ui_inodeNo);
+                   } else {
+                        temp = s_createHashTableNode(currentNode->s_inode->cptr_fileName,
+                                                   currentNode->s_inode->ui_inodeNo);
+                        current = dirList;
+                        while(current->sPtr_nextNode != NULL){
+                             current = current->sPtr_nextNode;
+                        }
+                        current->sPtr_nextNode = temp;
+                   } /* End of inner if-else */
+              } /* end of if( currentNode->s_inode->c_fileType[0] == 'd' ) */
+         }
+    }
+    fclose(fp);
+
+    return dirList;
 }

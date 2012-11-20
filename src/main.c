@@ -130,39 +130,41 @@ void unmountvfs ( char *P1 )
 
 void makedir ( char *P1, char *P2 ){
     v_makedir(P1,P2);
+#if 1
+    printf("DEBUG: After makedir operation of %s/%s\n ",P1,P2);
+    v_traverseNAryTree(sPtr_rootNAryTree,INODENUM);
+    v_traverseBST(sPtr_rootBST,FILEPATH);
+#endif
 }
 
-void deletedir ( char *P1 ){
-#if 1
-    printf("DEBUG: After makedir operation \n ");
-    v_traverseNAryTree(sPtr_rootNAryTree);
-#endif	
+void deletedir ( char *P1 ){	
     v_deletedir(P1);
 #if 1
-    printf("DEBUG: After deletedir operation \n ");
-    v_traverseNAryTree(sPtr_rootNAryTree);
+    printf("DEBUG: After deletedir operation %s\n ",P1);
+    v_traverseNAryTree(sPtr_rootNAryTree,INODENUM);
+    v_traverseBST(sPtr_rootBST,FILEPATH);
 #endif	
 }
 
 void movedir ( char *P1, char *P2 ){
     v_movedir(P1,P2);
 #if 1
-    printf("DEBUG: After movedir operation \n ");
-    v_traverseNAryTree(sPtr_rootNAryTree);
+    printf("DEBUG: After movedir operation from %s to %s \n ",P1,P2);
+    v_traverseNAryTree(sPtr_rootNAryTree,INODENUM);
+    v_traverseBST(sPtr_rootBST,FILEPATH);
 #endif	
 
 }
 
-void listdir ( char *P1, int P2, char *P3 )
-{
-	/* Call the appropriate function with given arguments and display appropriate output on the screen */
-	printf("listdir_TO_BE_DONE\n");
+void listdir ( char *P1, int P2, char *P3 ){
+    v_listdir(P1,P2,P3);
 }
 
 void addfile ( char *P1, char *P2, char *P3 )
 {
-	/* Call the appropriate function with given arguments and display appropriate output on the screen */
-	printf("addfile_TO_BE_DONE\n");
+    v_addfile(P1,P2,P3);
+    printf("\n");
+    v_traverseNAryTree(sPtr_rootNAryTree,INODENUM);
 }
 
 void listfile ( char *P1, char *P2 )

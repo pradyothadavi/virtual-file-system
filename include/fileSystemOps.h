@@ -8,6 +8,7 @@ Version No : 1.0
 #define DEBUG 0
 
 #define VFS_NAMELEN 32
+#define VFS_FILEPATHLEN 32
 #define VFS_UNIQUE_FILE_SYSTEM_NO 1316
 #define VFS_INODE_STARTBLOCK 2
 #define VFS_ROOT_INODE 4
