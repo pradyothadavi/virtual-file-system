@@ -10,13 +10,11 @@ Application Name: Virtual File System
 #include <string.h>
 #include <stdlib.h>
 
-#include "mainHeader.h"
-#include "limits.h"
-#include "fileSystemOps.h"
-#include "nAryTree.h"
-#include "hashTable.h"
 #include "global.h"
-#include "freeList.h"
+#include "main.h"
+#include "vfs_errorcodes.h"
+#include "nAryTree.h"
+#include "binarySearchTree.h"
 
 /*
 Function Name: main
@@ -30,6 +28,8 @@ Return Type: It return a integer type, to the operating system
              0 --> If programs exits successfully
              Greater than 0 --> On abnormal termination
 */
+unsigned int ui_mountFlag = 0;
+
 int main( int argc, char *argv[] ){
     
     FILE *scriptfp;
@@ -50,11 +50,10 @@ int main( int argc, char *argv[] ){
 
     while( fgets(linebuffer, sizeof(linebuffer), scriptfp) != NULL ){
 	 /* This output is for debugging... do not uncomment in final version */
-	 /*
+#if MAIN_DEBUG
 	 printf("==================================================\n");
 	 printf("Processing: %s", linebuffer);
-	 printf("==================================================\n");
-	 */
+#endif
 
 	 /* Remove the extra newline character in the end of line */
 	 linebuffer[ strlen(linebuffer)-1 ] = '\0';
@@ -65,11 +64,15 @@ int main( int argc, char *argv[] ){
 	 strcpy( par1, (token = strtok(NULL, " ")) == NULL ? "" : token );
 	 strcpy( par2, (token = strtok(NULL, " ")) == NULL ? "" : token );
 	 strcpy( par3, (token = strtok(NULL, " ")) == NULL ? "" : token );
-	
-         /* printf("Command:%s:p1:%s:p2:%s:p3:%s\n",command, par1, par2, par3); */
+#if MAIN_DEBUG
+      printf("Command:%s:p1:%s:p2:%s:p3:%s\n",command, par1, par2, par3);
+      printf("==================================================\n");
+#endif
 
 	 processcommand( command, par1, par2, par3 );
     }
+
+    v_freeResources();
 
     return 0;
 }
@@ -78,14 +81,45 @@ void processcommand( char *command, char *P1, char *P2, char *P3 ){
 	
     if( strcmp(command, "createvfs") == 0 ){
 	 int size = atoi(P2);
-	 createvfs (P1,size);
+         if( (0 == strcmp(P1,"")) || 0 == P2 ){
+              printf("createvfs_FAILURE %s \n",ERR_VFS_CREATE_00);
+         } else {
+              createvfs (P1,size);
+         }
     }
-    else if( strcmp(command, "mountvfs") == 0 )
-	 mountvfs (P1);
-    else if( strcmp(command, "unmountvfs") == 0 )
-	 unmountvfs (P1);
-    else if( strcmp(command, "makedir") == 0 )
-	 makedir (P1,P2);
+    else if( strcmp(command, "mountvfs") == 0 ){
+         if( (0 == strcmp(P1,"")) ){
+              printf("mountvfs_FAILURE %s \n",ERR_VFS_MOUNT_05);
+         } else {
+              if( 1 == ui_mountFlag ){
+                   printf("mountvfs_FAILURE %s \n",ERR_VFS_MOUNT_04);
+              } else {
+                   mountvfs (P1);
+              }
+         }
+    }
+    else if( strcmp(command, "unmountvfs") == 0 ){
+         if( (0 == strcmp(P1,"")) ){
+              printf("unmountvfs_FAILURE %s \n",ERR_VFS_UNMOUNT_00);
+         } else {
+              if( 0 == ui_mountFlag ){
+                   printf("unmountvfs_FAILURE %s \n",ERR_VFS_UNMOUNT_04);
+              } else {
+                   unmountvfs (P1);
+              }
+         }
+    }
+    else if( strcmp(command, "makedir") == 0 ){
+         if( (0 == strcmp(P1,"")) || (0 == strcmp(P2,"")) ){
+              printf("makedir_FAILURE %s \n",ERR_VFS_MAKEDIR_00);
+         } else {
+              if( 0 == ui_mountFlag ){
+                   printf("makedir_FAILURE %s \n",ERR_VFS_MAKEDIR_05);
+              } else {
+                   makedir (P1,P2);
+              }
+         } 
+    }
     else if( strcmp(command, "deletedir") == 0 )
 	 deletedir (P1);
     else if( strcmp(command, "movedir") == 0 )
@@ -115,98 +149,114 @@ void processcommand( char *command, char *P1, char *P2, char *P3 ){
 }
 
 void createvfs ( char *P1, int P2 ){
-    create_vfs(P1,P2);
+ 
+    int i_retVal = 0;
+
+    i_retVal = i_createvfs(P1,P2);
+    if( SUCCESS == i_retVal ){
+         printf("createvfs_SUCCESS \n");
+    }
 }
 
 void mountvfs ( char *P1 ){
-    mount_vfs(P1);
+
+    int i_retVal = 0;
+
+    i_retVal = i_mountvfs(P1);
+    if( SUCCESS == i_retVal ){
+         ui_mountFlag = 1;
+#if MAIN_DEBUG
+         v_traverseNAryTree(sPtr_rootNAryTree,INODENUM);
+         v_traverseBST(sPtr_rootBST,FILEPATH);
+#endif
+         printf("mountvfs_SUCCESS \n");
+    }
 }
 
-void unmountvfs ( char *P1 )
-{
-	/* Call the appropriate function with given arguments and display appropriate output on the screen */
-	printf("unmountvfs_TO_BE_DONE\n");
+void unmountvfs ( char *P1 ){
+
+    int i_retVal = 0;
+
+    i_retVal = i_unmountvfs(P1);
+    if( SUCCESS == i_retVal ){
+         v_freeResources();
+         ui_mountFlag = 0;
+         printf("unmountvfs_SUCCESS \n");
+    }
 }
 
 void makedir ( char *P1, char *P2 ){
-    v_makedir(P1,P2);
-#if 1
-    printf("DEBUG: After makedir operation of %s/%s\n ",P1,P2);
-    v_traverseNAryTree(sPtr_rootNAryTree,INODENUM);
-    v_traverseBST(sPtr_rootBST,FILEPATH);
+
+    int i_retVal = 0;
+
+    i_retVal = i_makedir(P1,P2);
+    if( SUCCESS == i_retVal ){
+#if MAIN_DEBUG
+         v_traverseNAryTree(sPtr_rootNAryTree,INODENUM);
+         v_traverseBST(sPtr_rootBST,FILEPATH);
 #endif
+         printf("makedir_SUCCESS \n");
+    }
 }
 
 void deletedir ( char *P1 ){	
-    v_deletedir(P1);
-#if 1
-    printf("DEBUG: After deletedir operation %s\n ",P1);
-    v_traverseNAryTree(sPtr_rootNAryTree,INODENUM);
-    v_traverseBST(sPtr_rootBST,FILEPATH);
-#endif	
+
 }
 
 void movedir ( char *P1, char *P2 ){
-    v_movedir(P1,P2);
-#if 1
-    printf("DEBUG: After movedir operation from %s to %s \n ",P1,P2);
-    v_traverseNAryTree(sPtr_rootNAryTree,INODENUM);
-    v_traverseBST(sPtr_rootBST,FILEPATH);
-#endif	
 
 }
 
 void listdir ( char *P1, int P2, char *P3 ){
-    v_listdir(P1,P2,P3);
+
 }
 
-void addfile ( char *P1, char *P2, char *P3 )
-{
-    v_addfile(P1,P2,P3);
-    printf("\n");
-    v_traverseNAryTree(sPtr_rootNAryTree,INODENUM);
+void addfile ( char *P1, char *P2, char *P3 ){
+
 }
 
-void listfile ( char *P1, char *P2 )
-{
+void listfile ( char *P1, char *P2 ){
 	/* Call the appropriate function with given arguments and display appropriate output on the screen */
 	printf("listfile_TO_BE_DONE\n");
 }
 
-void updatefile ( char *P1, char *P2 )
-{
+void updatefile ( char *P1, char *P2 ){
 	/* Call the appropriate function with given arguments and display appropriate output on the screen */
 	printf("updatefile_TO_BE_DONE\n");
 }
 
-void removefile ( char *P1 )
-{
+void removefile ( char *P1 ){
 	/* Call the appropriate function with given arguments and display appropriate output on the screen */
 	printf("removefile_TO_BE_DONE\n");
 }
 
-void movefile ( char *P1, char *P2 )
-{
+void movefile ( char *P1, char *P2 ){
 	/* Call the appropriate function with given arguments and display appropriate output on the screen */
 	printf("movefile_TO_BE_DONE\n");
 }
 
-void copyfile ( char *P1, char *P2 )
-{
+void copyfile ( char *P1, char *P2 ){
 	/* Call the appropriate function with given arguments and display appropriate output on the screen */
 	printf("copyfile_TO_BE_DONE\n");
 }
 
-void exportfile ( char *P1, char *P2 )
-{
+void exportfile ( char *P1, char *P2 ){
 	/* Call the appropriate function with given arguments and display appropriate output on the screen */
 	printf("exportfile_TO_BE_DONE\n");
 }
 
-void searchfile ( char *P1, char *P2 )
-{
+void searchfile ( char *P1, char *P2 ){
 	/* Call the appropriate function with given arguments and display appropriate output on the screen */
 	printf("searchfile_TO_BE_DONE\n");
 }
 
-
+/*
+Function Name:
+Description:
+Parameters:
+Return Type:
+*/
+void v_freeResources(){
+    free(cPtr_nameOfVfsMounted);
+    v_deleteNAryTreeNode(sPtr_rootNAryTree);
+}

@@ -1,11 +1,15 @@
 #ifndef _BST_
 #define _BST_
 
-#include "fileSystemOps.h"
-#include "nAryTree.h"
+#define BST_DEBUG 0
 
 #define INODE 301
 #define FILEPATH 302
+#define UNMOUNT 303
+#define UNMOUNTVERIFICATION 304
+
+#include "global.h"
+#include "nAryTree.h"
 
 struct binarySearchTree{
     char cArr_filePath[VFS_FILEPATHLEN];
@@ -14,8 +18,6 @@ struct binarySearchTree{
     struct binarySearchTree *leftChild;
     struct binarySearchTree *rightChild;
 };
-
-void v_loadBST(struct nAryTreeNode *);
 
 struct binarySearchTree *s_insertBSTNode(struct binarySearchTree *,struct binarySearchTree *);
 
@@ -30,5 +32,7 @@ void v_transplantBSTNode(struct binarySearchTree *,struct binarySearchTree *,str
 void v_deleteBSTNode(struct binarySearchTree *, struct binarySearchTree *);
 
 struct binarySearchTree *s_getLeftMostBSTNode(struct binarySearchTree *);
+
+void v_storeDirectoryEntries(struct binarySearchTree *,int);
 
 #endif

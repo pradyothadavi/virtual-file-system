@@ -1,3 +1,6 @@
+#include<stdio.h>
+#include<stdlib.h>
+
 #include "freeList.h"
 
 /*
@@ -102,10 +105,11 @@ int i_getFreeBlock(struct freeList *headPtr){
          /* Decrement the value in the head node by 1 */
          currentNode->ui_blockNo--;
 
-         currentNode = currentNode->sPtr_nextFreeBlock;
-         i_freeBlockNo = currentNode->ui_blockNo;
-         v_deleteFreeListNode(headPtr, currentNode);
-         
+         if( NULL != currentNode->sPtr_nextFreeBlock ){
+              currentNode = currentNode->sPtr_nextFreeBlock;
+              i_freeBlockNo = currentNode->ui_blockNo;
+              v_deleteFreeListNode(headPtr, currentNode);
+         }
     }
 
     return i_freeBlockNo;
@@ -122,12 +126,12 @@ Return Type: void
 */
 void v_deleteFreeListNode(struct freeList *headPtr, struct freeList *currentNode){
 
-#if DEBUG
+#if FREELISTDEBUG
     printf("DEBUG: The deleted data block no: %d \n",currentNode->ui_blockNo);
 #endif
     headPtr->sPtr_nextFreeBlock = currentNode->sPtr_nextFreeBlock;
-    
-    free(currentNode);
+    currentNode->sPtr_nextFreeBlock = NULL;
+    /*free(currentNode);*/
 }
 /*
 Function Name: s_addFreeDataBlock
@@ -142,7 +146,7 @@ struct freeList * s_addFreeBlock(struct freeList *headPtr, int i_dataBlockNo){
     struct freeList *tempNode = NULL;
 
     tempNode = s_createFreeListNode(i_dataBlockNo);
-#if DEBUG
+#if FREELIST_DEBUG
     printf("DEBUG: No.of.data blocks present : %d \n",headPtr->ui_blockNo);
 #endif
     headPtr = s_insertFreeListNode(headPtr,tempNode);
